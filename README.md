@@ -3,6 +3,31 @@
 프로젝트 초기 스캐폴딩이 마무리된 후, 로컬 환경에서 프로젝트를 실행하고 관리하는 전체적인 가이드입니다.
 
 ---
+### 시스템 요구 사항 및 사전 준비 사항 ✅
+- **Docker Desktop**: 최신 버전 설치 및 실행 (Mac, Windows, Linux 지원)
+- **Java 21+**: 백엔드(Spring Boot 3) 개발 및 실행
+- **Node.js 18+**: 프론트엔드(React + Vite) 개발 및 실행
+- **IntelliJ IDEA**: 프론트엔드, 백엔드 개발을 위한 권장 IDE (Community 또는 Ultimate)
+- **PostgreSQL & Redis**: Docker Compose로 자동 관리 (포트 55432, 56379)
+- **환경 변수 관리**: `.env` 파일을 통한 설정 (예시 파일 제공)
+- **기본 포트 정보**:
+  - 프론트엔드: 55173 (Docker), 5173 (로컬 dev)
+  - 어드민: 5174 (Docker), 5174 (로컬 dev)
+  - 백엔드: 8080 (Docker), 8080 (로컬 dev)
+  - PostgreSQL: 55432 (Docker), 5432 (로컬)
+  - Redis: 56379 (Docker), 6379 (로컬)
+
+### 0. 시스템 실행 전, 라이브러리 설치 및 환경 설정
+- **frontend/admin**: 필요한 NPM 패키지 설치
+    ```bash
+    cd frontend   # 또는 cd admin
+    npm install
+    ```
+- **backend**: Gradle Wrapper로 의존성 설치
+    ```bash
+    cd backend
+    ./gradlew dependencies
+    ```
 
 ## 1. Docker Compose로 전체 시스템 실행 🐳
 
