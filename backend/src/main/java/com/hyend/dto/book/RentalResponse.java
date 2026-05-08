@@ -1,4 +1,5 @@
 package com.hyend.dto.book;
 
-public class RentalResponse {
+// TODO [H-1] 도서 대출 응답 DTO 구현
+public record RentalResponse() {
 }

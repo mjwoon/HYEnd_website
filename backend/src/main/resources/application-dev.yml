@@ -1,14 +1,18 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/hyend_db}
-    username: user
-    password: password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:55432/hyend}
+    username: ${SPRING_DATASOURCE_USERNAME:user}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:56379}
   jpa:
     show-sql: true
+
+jwt:
+  # 개발용 전용 시크릿 (Base64, 256bit 이상) — 운영 환경에서는 반드시 JWT_SECRET 환경변수로 교체
+  secret: ${JWT_SECRET:aHllbmQtZGV2LXNlY3JldC1rZXktZm9yLWxvY2FsLWRldmVsb3BtZW50LW9ubHktbm90LWZvci1wcm9kdWN0aW9u}
 
 logging:
   level:

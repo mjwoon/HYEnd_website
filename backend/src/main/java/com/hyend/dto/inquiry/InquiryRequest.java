@@ -1,4 +1,5 @@
 package com.hyend.dto.inquiry;
 
-public class InquiryRequest {
+// TODO [H-1] 문의 생성 요청 DTO 구현
+public record InquiryRequest() {
 }

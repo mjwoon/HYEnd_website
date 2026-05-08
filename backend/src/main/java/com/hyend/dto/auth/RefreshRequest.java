@@ -1,4 +1,7 @@
 package com.hyend.dto.auth;
 
-public class RefreshRequest {
-}
+import jakarta.validation.constraints.NotBlank;
+
+public record RefreshRequest(
+        @NotBlank String refreshToken
+) {}

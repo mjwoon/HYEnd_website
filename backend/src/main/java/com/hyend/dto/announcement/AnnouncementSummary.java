@@ -1,4 +1,5 @@
 package com.hyend.dto.announcement;
 
-public class AnnouncementSummary {
+// TODO [H-1] 공지사항 목록용 요약 DTO 구현
+public record AnnouncementSummary() {
 }
