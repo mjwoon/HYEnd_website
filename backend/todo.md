@@ -57,9 +57,9 @@
 - [ ] **L-8** Auth 서비스 + 컨트롤러
   - [ ] `service/AuthService.java` (register, login, refresh, logout)
   - [ ] `controller/AuthController.java`
-- [ ] **L-9** 공지사항 서비스 + 컨트롤러 (Redis 캐싱 + 핀 고정 로직)
-  - [ ] `service/AnnouncementService.java`
-  - [ ] `controller/AnnouncementController.java`
+- [x] **L-9** 공지사항 서비스 + 컨트롤러 (Redis 캐싱 + 핀 고정 로직)
+  - [x] `service/AnnouncementService.java`
+  - [x] `controller/AnnouncementController.java`
 - [ ] **L-10** 파일 저장 서비스 (Strategy Pattern: local/S3 전환)
   - [ ] `common/FileValidationUtil.java` (MIME 검증 + UUID 파일명)
   - [ ] `service/FileStorageService.java` (interface)
