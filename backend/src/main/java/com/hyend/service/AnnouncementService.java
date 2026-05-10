@@ -1,6 +1,7 @@
 package com.hyend.service;
 
 import com.hyend.common.ErrorCode;
+import com.hyend.common.RestPage;
 import com.hyend.dto.announcement.AnnouncementRequest;
 import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.dto.announcement.AnnouncementSummary;
@@ -32,12 +33,12 @@ public class AnnouncementService {
 
     @Cacheable(value = "announcements", key = "'list:' + #pageable.pageNumber + ':' + #pageable.pageSize")
     public Page<AnnouncementSummary> getList(Pageable pageable) {
-        return announcementRepository.findAll(pageable).map(this::toSummary);
+        return new RestPage<>(announcementRepository.findAll(pageable).map(this::toSummary));
     }
 
     @Cacheable(value = "announcements", key = "'cat:' + #categoryId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize")
     public Page<AnnouncementSummary> getByCategory(Long categoryId, Pageable pageable) {
-        return announcementRepository.findByCategoryId(categoryId, pageable).map(this::toSummary);
+        return new RestPage<>(announcementRepository.findByCategoryId(categoryId, pageable).map(this::toSummary));
     }
 
     public Page<AnnouncementSummary> search(String keyword, Pageable pageable) {
