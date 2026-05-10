@@ -1,5 +1,7 @@
 package com.hyend.config;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,8 +14,6 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
 public class RateLimitConfig implements WebMvcConfigurer {
@@ -28,8 +28,16 @@ public class RateLimitConfig implements WebMvcConfigurer {
         private static final int AUTH_CAPACITY = 5;
         private static final int GENERAL_CAPACITY = 100;
 
-        private final Map<String, Bucket> authBuckets = new ConcurrentHashMap<>();
-        private final Map<String, Bucket> generalBuckets = new ConcurrentHashMap<>();
+        // IP당 버킷을 최대 크기와 비활성 만료로 바인딩 — ConcurrentHashMap의 무한 증가 방지
+        private final Cache<String, Bucket> authBuckets = Caffeine.newBuilder()
+                .maximumSize(10_000)
+                .expireAfterAccess(Duration.ofMinutes(2))
+                .build();
+
+        private final Cache<String, Bucket> generalBuckets = Caffeine.newBuilder()
+                .maximumSize(50_000)
+                .expireAfterAccess(Duration.ofMinutes(2))
+                .build();
 
         @Override
         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -37,8 +45,8 @@ public class RateLimitConfig implements WebMvcConfigurer {
             boolean isAuth = request.getRequestURI().startsWith("/api/auth/");
 
             Bucket bucket = isAuth
-                    ? authBuckets.computeIfAbsent(ip, k -> buildBucket(AUTH_CAPACITY))
-                    : generalBuckets.computeIfAbsent(ip, k -> buildBucket(GENERAL_CAPACITY));
+                    ? authBuckets.get(ip, k -> buildBucket(AUTH_CAPACITY))
+                    : generalBuckets.get(ip, k -> buildBucket(GENERAL_CAPACITY));
 
             if (bucket.tryConsume(1)) {
                 return true;
