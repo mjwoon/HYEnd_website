@@ -9,10 +9,6 @@
 > **역할:** 설계 결정, 보안/인증, 복잡한 비즈니스 로직, 코드 리뷰
 > **시작 조건:** 즉시 시작 가능
 
-### Day 3 — 핵심 서비스 구현
-- [ ] **L-11** Rate Limiting 설정
-  - [ ] `config/RateLimitConfig.java` (Auth: 5/분, 일반: 100/분)
-
 ### Day 4 — 테스트 & 코드 리뷰
 - [ ] **L-12** Auth 테스트 작성 (테스트 패턴 정립)
   - [ ] `test/resources/application-test.yml`

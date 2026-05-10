@@ -1,1 +1,40 @@
-# TODO [L-12] 테스트용 application.yml 설정 작성 (H2, test Redis 등)
+spring:
+  datasource:
+    url: jdbc:h2:mem:hyend_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+
+  flyway:
+    enabled: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# base64("testSecretKeyForTestingPurposesOnlyDoNotUseInProduction") — 55바이트 > HS256 최소 32바이트
+jwt:
+  secret: dGVzdFNlY3JldEtleUZvclRlc3RpbmdQdXJwb3Nlc09ubHlEb05vdFVzZUluUHJvZHVjdGlvbg==
+
+file:
+  storage:
+    type: local
+    local:
+      upload-dir: /tmp/hyend-test-uploads
+  allowed-extensions: jpg,jpeg,png,gif,pdf,docx,xlsx,pptx,hwp,zip
+  max-file-count: 5
+
+logging:
+  level:
+    root: WARN
+    com.hyend: INFO
