@@ -72,6 +72,10 @@ public class JwtTokenProvider {
         }
     }
 
+    public long getAccessTokenExpiryMs() {
+        return ACCESS_TOKEN_EXPIRY_MS;
+    }
+
     public long getRefreshTokenExpiryMs() {
         return REFRESH_TOKEN_EXPIRY_MS;
     }

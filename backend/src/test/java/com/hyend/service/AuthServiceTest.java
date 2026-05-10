@@ -79,6 +79,7 @@ class AuthServiceTest {
                 .willReturn(new UsernamePasswordAuthenticationToken(principal, null));
         given(jwtTokenProvider.createAccessToken(1L, "test@test.com", "STUDENT")).willReturn("access-token");
         given(jwtTokenProvider.createRefreshToken(1L, "test@test.com", "STUDENT")).willReturn("refresh-token");
+        given(jwtTokenProvider.getAccessTokenExpiryMs()).willReturn(15 * 60 * 1000L);
         given(jwtTokenProvider.getRefreshTokenExpiryMs()).willReturn(7 * 24 * 60 * 60 * 1000L);
         given(userRepository.getReferenceById(1L))
                 .willReturn(User.of("test@test.com", "encoded", "홍길동", User.Role.STUDENT));
@@ -146,6 +147,7 @@ class AuthServiceTest {
 
         given(jwtTokenProvider.createAccessToken(1L, "test@test.com", "STUDENT")).willReturn("new-access");
         given(jwtTokenProvider.createRefreshToken(1L, "test@test.com", "STUDENT")).willReturn("new-refresh");
+        given(jwtTokenProvider.getAccessTokenExpiryMs()).willReturn(15 * 60 * 1000L);
         given(jwtTokenProvider.getRefreshTokenExpiryMs()).willReturn(7 * 24 * 60 * 60 * 1000L);
         given(userRepository.getReferenceById(1L)).willReturn(user);
 
