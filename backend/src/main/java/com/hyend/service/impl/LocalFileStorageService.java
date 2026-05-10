@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 
 @Service
 @ConditionalOnProperty(name = "file.storage.type", havingValue = "local", matchIfMissing = true)
@@ -71,12 +72,13 @@ public class LocalFileStorageService implements FileStorageService {
         }
     }
 
-    public Resource loadAsResource(String storedFilename) {
+    @Override
+    public Optional<Resource> loadAsResource(String storedFilename) {
         Path filePath = uploadPath.resolve(storedFilename).normalize();
         try {
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() && resource.isReadable()) {
-                return resource;
+                return Optional.of(resource);
             }
         } catch (MalformedURLException ignored) {}
         throw new BusinessException(ErrorCode.ATTACHMENT_NOT_FOUND);

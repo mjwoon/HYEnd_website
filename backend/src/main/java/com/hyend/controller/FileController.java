@@ -7,7 +7,6 @@ import com.hyend.exception.BusinessException;
 import com.hyend.common.ErrorCode;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.FileStorageService;
-import com.hyend.service.impl.LocalFileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -58,12 +57,10 @@ public class FileController {
         if (filename.contains("..") || filename.contains("/")) {
             return ResponseEntity.badRequest().build();
         }
-        if (!(fileStorageService instanceof LocalFileStorageService localService)) {
-            return ResponseEntity.notFound().build();
-        }
-        Resource resource = localService.loadAsResource(filename);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
+        return fileStorageService.loadAsResource(filename)
+                .map(resource -> ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource))
+                .orElse(ResponseEntity.notFound().build());
     }
 }

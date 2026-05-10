@@ -15,7 +15,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import org.springframework.core.io.Resource;
+
 import java.io.IOException;
+import java.util.Optional;
 
 @Service
 @ConditionalOnProperty(name = "file.storage.type", havingValue = "s3")
@@ -55,6 +58,11 @@ public class S3FileStorageService implements FileStorageService {
                 file.getSize(),
                 file.getContentType()
         );
+    }
+
+    @Override
+    public Optional<Resource> loadAsResource(String storedFilename) {
+        return Optional.empty();
     }
 
     @Override
