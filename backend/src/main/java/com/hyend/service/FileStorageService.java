@@ -1,5 +1,9 @@
 package com.hyend.service;
 
-// TODO [L-10] 파일 저장 서비스 인터페이스 구현 (Strategy Pattern: local/S3 전환)
+import com.hyend.dto.file.FileResponse;
+import org.springframework.web.multipart.MultipartFile;
+
 public interface FileStorageService {
+    FileResponse store(MultipartFile file);
+    void delete(String storedFilename);
 }

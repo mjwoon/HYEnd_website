@@ -10,12 +10,6 @@
 > **시작 조건:** 즉시 시작 가능
 
 ### Day 3 — 핵심 서비스 구현
-- [ ] **L-10** 파일 저장 서비스 (Strategy Pattern: local/S3 전환)
-  - [ ] `common/FileValidationUtil.java` (MIME 검증 + UUID 파일명)
-  - [ ] `service/FileStorageService.java` (interface)
-  - [ ] `service/impl/LocalFileStorageService.java`
-  - [ ] `service/impl/S3FileStorageService.java`
-  - [ ] `controller/FileController.java`
 - [ ] **L-11** Rate Limiting 설정
   - [ ] `config/RateLimitConfig.java` (Auth: 5/분, 일반: 100/분)
 
@@ -45,16 +39,6 @@
   - [ ] `dto/inquiry/` — InquiryRequest, InquiryResponse, ReplyRequest, ReplyResponse
   - [ ] `dto/category/` — CategoryRequest, CategoryResponse
   - [ ] `dto/file/` — FileResponse
-- [ ] **H-2** Flyway 마이그레이션 SQL 작성 (리더의 entity 설계 참고)
-  - [ ] `V1__create_users.sql`
-  - [ ] `V2__create_categories.sql`
-  - [ ] `V3__create_announcements.sql`
-  - [ ] `V4__create_events.sql`
-  - [ ] `V5__create_books.sql`
-  - [ ] `V6__create_inquiries.sql`
-  - [ ] `V7__create_attachments.sql`
-  - [ ] `V8__create_refresh_tokens.sql`
-  - [ ] `V9__seed_data.sql` (admin 계정 + 기본 카테고리)
 
 ### Day 2 (리더와 병렬)
 - [ ] **H-3** MapStruct Mapper 구현 (리더의 entity 완료 후)
