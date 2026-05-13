@@ -22,6 +22,9 @@ spring:
 server:
   port: 8080
 
+jwt:
+  secret: ${JWT_SECRET}
+
 # 파일 저장소 설정
 file:
   storage:
