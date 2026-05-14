@@ -58,13 +58,13 @@ const BubbleList = styled.div`
 
 const Bubble = styled.div<{ $position: string }>`
   width: fit-content;
-  max-width: 620px;
+  max-width: 630px;
   padding: 18px 42px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.1);
   color: #55ff78;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.6;
 
   margin-left: ${({ $position }) => ($position === "right" ? "360px" : "0")};

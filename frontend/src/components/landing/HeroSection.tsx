@@ -14,7 +14,7 @@ const Title = styled.div`
 `;
 
 const WelcomeText = styled.h2`
-  font-size: 3rem;
+  font-size: 2rem;
   color: white;
   font-weight: 300;
   letter-spacing: 0.1em;
