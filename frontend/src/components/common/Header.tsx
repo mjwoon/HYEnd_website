@@ -3,6 +3,9 @@ import {Link, useLocation} from 'react-router-dom';
 import styled from 'styled-components';
 import {motion, AnimatePresence} from 'motion/react';
 import {useAuthStore} from '@/store/authStore';
+import {useModal} from '@/hooks/useModal';
+import Modal from '@/components/common/Modal';
+import JoinUsModal from '@/components/common/JoinUsModal';
 
 const Nav = styled.header`
     position: fixed;
@@ -97,12 +100,16 @@ const DropdownItem = styled(Link)<{ $active: boolean }>`
     }
 `;
 
-const JoinUsLink = styled(Link)`
+const JoinUsButton = styled.button`
     font-size: 0.9375rem;
     color: ${({theme}) => theme.colors.neonGreen};
-    text-decoration: none;
-    font-weight: 600;
+    font-family: ${({theme}) => theme.typography.fontFamily};
+    font-weight: ${({theme}) => theme.typography.fontWeight.bold};
+    background: none;
+    border: none;
+    cursor: pointer;
     transition: opacity 0.2s;
+    padding: 0;
 
     &:hover {
         opacity: 0.8;
@@ -126,11 +133,13 @@ export default function Header() {
     const {pathname} = useLocation();
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     const [openDropdown, setOpenDropdown] = useState<'about' | 'board' | null>(null);
+    const joinUsModal = useModal();
 
     const isAboutActive = pathname.startsWith('/about');
     const isBoardActive = pathname.startsWith('/board');
 
     return (
+        <>
         <Nav>
             <Logo to="/">HY-END</Logo>
 
@@ -197,8 +206,14 @@ export default function Header() {
                     </NavLink>
                 </NavItem>
 
-                {!isAuthenticated && <JoinUsLink to="/join">Join Us →</JoinUsLink>}
+                {!isAuthenticated && (
+                    <JoinUsButton onClick={joinUsModal.open}>Join Us →</JoinUsButton>
+                )}
             </NavLinks>
         </Nav>
+        <Modal isOpen={joinUsModal.isOpen} onClose={joinUsModal.close} blur>
+            <JoinUsModal onSwitchToLogin={joinUsModal.close} />
+        </Modal>
+        </>
     );
 }
