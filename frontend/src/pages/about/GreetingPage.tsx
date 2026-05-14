@@ -5,6 +5,6 @@ const Wrapper = styled.div`
   color: white;
 `;
 
-export default function HomePage() {
-  return <Wrapper>HomePage</Wrapper>;
+export default function GreetingPage() {
+  return <Wrapper>GreetingPage</Wrapper>;
 }
