@@ -1,4 +1,5 @@
 import IntroduceSection from '@/components/landing/IntroduceSection';
+import ExhibitionSection from '@/components/landing/ExhibitionSection';
 import { useState } from 'react';
 import styled from 'styled-components';
 
@@ -60,6 +61,10 @@ export default function LandingPage() {
           <IntroducePosition>
             <IntroduceSection />
           </IntroducePosition>
+        ) : currentSlide.id === 'exhibition' ? (
+          <ExhibitionPosition>
+            <ExhibitionSection />
+          </ExhibitionPosition>
         ) : (
           <Content>
             {currentSlide.id === 'home' && (
@@ -164,6 +169,14 @@ const IntroducePosition = styled.div`
   transform: translateY(-25px);
 `;
 
+const ExhibitionPosition = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+`;
+
 const Content = styled.div`
   position: relative;
   z-index: 2;
@@ -242,7 +255,7 @@ const Dots = styled.div<{ $isHome: boolean }>`
   position: absolute;
   left: 50%;
   bottom: ${({ $isHome }) => ($isHome ? '306px' : '24px')};
-  z-index: 10;
+  z-index: 20;
   display: flex;
   gap: 14px;
   transform: translateX(-50%);
