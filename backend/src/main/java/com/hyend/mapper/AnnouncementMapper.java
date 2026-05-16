@@ -6,11 +6,12 @@ import com.hyend.dto.announcement.AnnouncementSummary;
 import com.hyend.entity.Announcement;
 import org.mapstruct.Mapper;
 
-// TODO [H-3] 공지사항 MapStruct Mapper 구현
 @Mapper(componentModel = "spring")
 public interface AnnouncementMapper {
-        Announcement toEntity(AnnouncementRequest request);
+        @org.mapstruct.Mapping(source = "category.name", target = "category")
+        @org.mapstruct.Mapping(source = "author.name", target = "writer")
+        @org.mapstruct.Mapping(source = "pinned", target = "isImportant")
         AnnouncementResponse toResponse(Announcement announcement);
-        AnnouncementSummary toSummary(Announcement announcement);
 
+        AnnouncementSummary toSummary(Announcement announcement);
 }
