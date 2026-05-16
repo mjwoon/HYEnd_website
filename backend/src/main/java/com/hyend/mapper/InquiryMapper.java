@@ -8,13 +8,14 @@ import com.hyend.entity.Inquiry;
 import com.hyend.entity.InquiryReply;
 import org.mapstruct.Mapper;
 
-// TODO [H-3] 문의 MapStruct Mapper 구현
 @Mapper(componentModel="spring")
 public interface InquiryMapper {
-    Inquiry toEntity(InquiryRequest request);
+    @org.mapstruct.Mapping(source = "id", target = "inquiryId")
+    @org.mapstruct.Mapping(target = "category", ignore = true)
     InquiryResponse toResponse(Inquiry inquiry);
 
-    InquiryReply toEntity(ReplyRequest request);
+    @org.mapstruct.Mapping(source = "id", target = "replyId")
+    @org.mapstruct.Mapping(source = "author.name", target = "writer")
     ReplyResponse toResponse(InquiryReply inquiry);
 
 }
