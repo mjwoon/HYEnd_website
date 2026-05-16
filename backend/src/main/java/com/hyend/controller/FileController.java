@@ -8,6 +8,7 @@ import com.hyend.common.ErrorCode;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -32,6 +33,7 @@ public class FileController {
     private final FileStorageConfig fileStorageConfig;
 
     @Operation(summary = "파일 업로드")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<List<FileResponse>> upload(
