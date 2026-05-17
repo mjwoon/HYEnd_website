@@ -1,7 +1,6 @@
 import { useState, type CSSProperties } from "react";
 
 const NEON = "#39ff6a";
-const BG = "#080808";
 
 type ExhibitionItem = {
   id: number;
@@ -88,11 +87,6 @@ export default function ExhibitionSection() {
 
   return (
     <section style={styles.section}>
-      <div style={styles.orbWrap}>
-        <div style={styles.orbOuter} />
-        <div style={styles.orbMiddle} />
-        <div style={styles.orbInner} />
-      </div>
 
       <h2 style={styles.heading}>
         <span>HY-END</span>
@@ -141,11 +135,10 @@ export default function ExhibitionSection() {
   );
 }
 
-const styles: Record<string, CSSProperties> = {
+const styles = {
   section: {
     position: "relative",
-    minHeight: "100vh",
-    backgroundColor: BG,
+    minHeight: "100%",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -153,49 +146,6 @@ const styles: Record<string, CSSProperties> = {
     overflow: "hidden",
     padding: "88px 0 58px",
     fontFamily: "'Apple SD Gothic Neo', 'Pretendard', sans-serif",
-  },
-  orbWrap: {
-    position: "absolute",
-    width: 920,
-    height: 720,
-    top: "52%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    pointerEvents: "none",
-    zIndex: 0,
-  },
-  orbOuter: {
-    position: "absolute",
-    width: 820,
-    height: 820,
-    borderRadius: "50%",
-    border: "3px solid rgba(255,255,255,0.05)",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    background: "transparent",
-  },
-  orbMiddle: {
-    position: "absolute",
-    width: 560,
-    height: 560,
-    borderRadius: "50%",
-    border: "3px solid rgba(255,255,255,0.052)",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    background: "transparent",
-  },
-  orbInner: {
-    position: "absolute",
-    width: 330,
-    height: 330,
-    borderRadius: "50%",
-    border: "3px solid rgba(255,255,255,0.052)",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    background: "transparent",
   },
   heading: {
     width: "100%",
@@ -206,8 +156,8 @@ const styles: Record<string, CSSProperties> = {
     alignSelf: "center",
     margin: "-20px 0 28px",
     color: NEON,
-    fontSize: 46,
-    fontWeight: 400,
+    fontSize: 64,
+    fontWeight: "400",
     lineHeight: 1.14,
     letterSpacing: "-0.04em",
     textShadow: "0 0 12px rgba(57,255,106,0.85), 0 0 28px rgba(57,255,106,0.45)",
@@ -243,7 +193,7 @@ const styles: Record<string, CSSProperties> = {
   cardTag: {
     alignSelf: "flex-start",
     fontSize: 11,
-    fontWeight: 700,
+    fontWeight: "700",
     color: "rgba(255,255,255,0.9)",
     background: "rgba(255,255,255,0.15)",
     borderRadius: 5,
@@ -256,14 +206,15 @@ const styles: Record<string, CSSProperties> = {
     flex: 1,
     borderRadius: 4,
     overflow: "hidden",
-    background: "linear-gradient(135deg, rgba(57,255,106,0.2), rgba(255,255,255,0.08))",
+    background: "rgba(0,0,0,0.28)",
   },
   image: {
     position: "absolute",
     inset: 0,
     width: "100%",
     height: "100%",
-    objectFit: "cover",
+    objectFit: "contain",
+    backgroundColor: "rgba(0,0,0,0.18)",
     zIndex: 2,
   },
   imageFallback: {
@@ -285,7 +236,7 @@ const styles: Record<string, CSSProperties> = {
   },
   title: {
     fontSize: 13,
-    fontWeight: 700,
+    fontWeight: "700",
     color: "#fff",
     margin: 0,
     lineHeight: 1.34,
@@ -316,4 +267,4 @@ const styles: Record<string, CSSProperties> = {
     background: NEON,
     border: "1px solid rgba(57,255,106,0.8)",
   },
-};
+} satisfies Record<string, CSSProperties>;
