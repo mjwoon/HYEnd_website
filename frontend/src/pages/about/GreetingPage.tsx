@@ -38,9 +38,9 @@ const Content = styled.div`
 `;
 
 const Title = styled.h1`
-  margin: 0 0 54px;
+  margin: 0 0 44px;
   color: #55ff74;
-  font-size: 45px;
+  font-size: 55px;
   font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.045em;
@@ -54,6 +54,6 @@ const Description = styled.div`
   flex-direction: column;
   gap: 9px;
   font-size: 20px;
-  font-weight: 350;
+  font-weight: 400;
   line-height: 1.5;
 `;
