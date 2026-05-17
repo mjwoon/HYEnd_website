@@ -1,5 +1,6 @@
 import IntroduceSection from '@/components/landing/IntroduceSection';
 import ExhibitionSection from '@/components/landing/ExhibitionSection';
+import ContactSection from '@/components/landing/ContactSection';
 import { useState } from 'react';
 import styled from 'styled-components';
 
@@ -65,6 +66,10 @@ export default function LandingPage() {
           <ExhibitionPosition>
             <ExhibitionSection />
           </ExhibitionPosition>
+        ) : currentSlide.id === 'contact' ? (
+          <ContactPosition>
+            <ContactSection />
+          </ContactPosition>
         ) : (
           <Content>
             {currentSlide.id === 'home' && (
@@ -170,6 +175,14 @@ const IntroducePosition = styled.div`
 `;
 
 const ExhibitionPosition = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+`;
+
+const ContactPosition = styled.div`
   position: absolute;
   inset: 0;
   z-index: 2;
