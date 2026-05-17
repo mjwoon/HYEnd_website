@@ -59,15 +59,24 @@ export default function HeroSection() {
   return (
     <Section>
       <Dots>
-        <Dot active /><Dot /><Dot /><Dot />
+        <Dot active />
+        <Dot />
+        <Dot />
+        <Dot />
       </Dots>
+
       <Title>
         <WelcomeText>WELCOME TO</WelcomeText>
         <MainTitle>HY-END</MainTitle>
       </Title>
+
       <Dots>
-        <Dot active /><Dot /><Dot /><Dot />
+        <Dot active />
+        <Dot />
+        <Dot />
+        <Dot />
       </Dots>
+
       <ButtonGroup>
         <Button>로그인</Button>
         <Button filled>회원가입</Button>
