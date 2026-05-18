@@ -8,6 +8,7 @@ import com.hyend.dto.auth.TokenResponse;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class AuthController {
     }
 
     @Operation(summary = "로그아웃")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@AuthenticationPrincipal UserPrincipal principal) {
         authService.logout(principal.getId());
