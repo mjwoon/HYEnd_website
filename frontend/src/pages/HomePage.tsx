@@ -18,7 +18,7 @@ const MainContent = styled.div`
   display: flex;
   padding: 40px 70px;
   align-items: flex-start;
-  gap: 70px;
+  gap: 30px;
 `;
 
 const ProfileCard = styled.div`
@@ -46,6 +46,7 @@ const Name = styled.p`
   font-family: "Pretendard Variable";
   font-size: 28px;
   font-weight: 700;
+  line-height: normal;
   letter-spacing: 2.24px;
   margin: 0;
 `;
@@ -55,40 +56,69 @@ const InfoRow = styled.div`
   align-items: flex-start;
   gap: 10px;
   color: #C0C2C0;
-  font-size: 13px;
+  text-align: center;
+  font-family: "Pretendard Variable";
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
 `;
 
 const Email = styled.span`
   color: #C0C2C0;
   font-size: 13px;
+  margin-top: -16px;
+`;
+
+const InfoSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   width: 190px;
+  align-items: flex-start;
   gap: 10px;
 `;
 
 const Button = styled.button`
-  flex: 1;
-  padding: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #40423F;
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-  cursor: pointer;
+  display: flex;
+  padding: 8px 20px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  flex: 1 0 0;
+  color: #C0C2C0;
+  text-align: center;
+  font-family: "Pretendard Variable";
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  justify-content: center
 `;
 
 const MenuItem = styled.div`
   display: flex;
+  width: 230px;
+  height: 38px;
+  padding: 15px 20px;
   align-items: center;
-  width: 190px;
-  padding: 12px 16px;
+  gap: 10px;
   border-radius: 8px;
-  border: 1px solid #40423F;
-  background: rgba(255, 255, 255, 0.02);
-  gap: 8px;
-  cursor: pointer;
+  background: rgba(255, 255, 255, 0.04);
+`;
+
+const Bookitem = styled.div`
+  display: flex;
+  width: 230px;
+  height: 38px;
+  padding: 0 20px;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
 const BoardSection = styled.div`
@@ -120,6 +150,7 @@ const BoardHeader = styled.div`
   font-size: 16px;
   font-weight: 700;
   color: #FFF;
+  border-bottom: 1px solid #40423F;
 `;
 
 const BoardItem = styled.div`
@@ -128,8 +159,15 @@ const BoardItem = styled.div`
   width: 100%;
   font-size: 13px;
   color: #C0C2C0;
-  padding: 4px 0;
-  border-top: 1px solid #40423F;
+  padding: 0;
+`;
+
+const BoardTime = styled.span`
+  color: #676767;
+  font-family: "Pretendard Variable";
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
 `;
 
 export default function HomePage() {
@@ -153,20 +191,26 @@ export default function HomePage() {
             <ProfileCard>
               <ProfileImage />
               <Name>지민경</Name>
-              <InfoRow>
-                <span>ICT융합학부</span>
-                <span>2023098131</span>
-              </InfoRow>
+              <InfoSection>
+                <InfoRow>
+                  <span>ICT융합학부</span>
+                  <span>2023098131</span>
+                </InfoRow>
+              </InfoSection>
               <Email>rooftop1009@kakao.com</Email>
               <ButtonRow>
                 <Button>내 정보</Button>
                 <Button>로그아웃</Button>
               </ButtonRow>
             </ProfileCard>
-            <MenuItem>🍀 내가 쓴 글</MenuItem>
-            <MenuItem>📋 내 과제</MenuItem>
+            <MenuItem>✍🏻 내가 쓴 글</MenuItem>
+            <MenuItem>📝 내 과제</MenuItem>
             <MenuItem>⭐ 내 스크랩</MenuItem>
-            <MenuItem>📚 도서 대여하러 가기 →</MenuItem>
+            <Bookitem>
+              📚 도서 대여하러 가기
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="11" viewBox="0 0 13 11" fill="none">
+                <path d="M0.699219 5.19922H11.6992M7.29922 9.69922L11.6992 5.19922L7.29922 0.699219" stroke="#C0C2C0" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg></Bookitem>
           </div>
           <BoardSection>
             {['공모전 게시판', '제출 게시판', '자유 게시판'].map((title) => (
@@ -178,7 +222,7 @@ export default function HomePage() {
                   {boardItems.map((item, i) => (
                       <BoardItem key={i}>
                         <span>{item}</span>
-                        <span>{times[i]}</span>
+                        <BoardTime>{times[i]}</BoardTime>
                       </BoardItem>
                   ))}
                 </BoardCard>
