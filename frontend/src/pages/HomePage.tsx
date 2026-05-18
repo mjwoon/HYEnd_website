@@ -21,7 +21,6 @@ const NoticeText = styled.span`
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-  letter-spacing: -0.52px;
   text-decoration-line: underline;
   text-decoration-style: solid;
   text-decoration-skip-ink: auto;
