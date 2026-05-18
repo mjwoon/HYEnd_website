@@ -13,6 +13,22 @@ const NoticeBar = styled.div`
   background: rgba(249, 249, 249, 0.08);
   backdrop-filter: blur(5px);
 `;
+const NoticeText = styled.span`
+  color: #FFF;
+  text-align: center;
+  font-family: "Pretendard Variable";
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: -0.52px;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+  text-decoration-thickness: auto;
+  text-underline-offset: auto;
+  text-underline-position: from-font;
+`;
 
 const MainContent = styled.div`
   display: flex;
@@ -184,7 +200,7 @@ export default function HomePage() {
       <Wrapper>
         <NoticeBar>
           <span>공지사항</span>
-          <span>📢 재학생 프로젝트 2차 과제 마감일 공지</span>
+          <NoticeText>📢 재학생 프로젝트 2차 과제 마감일 공지</NoticeText>
         </NoticeBar>
         <MainContent>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
