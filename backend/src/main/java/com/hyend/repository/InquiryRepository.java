@@ -14,4 +14,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     // 비공개 글은 작성자 또는 STAFF/ADMIN만 조회 가능 - 서비스 레이어에서 처리
     @Query("SELECT i FROM Inquiry i WHERE i.isPrivate = false OR i.author.id = :userId")
     Page<Inquiry> findVisibleToUser(@Param("userId") Long userId, Pageable pageable);
+
+    Long authorId(Long authorId);
 }
