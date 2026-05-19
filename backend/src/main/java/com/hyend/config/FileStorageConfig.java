@@ -1,34 +1,48 @@
 package com.hyend.config;
 
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-// TODO [H-4] 파일 저장소 설정 구현
 @Configuration
+@ConfigurationProperties(prefix = "file")
+@Getter
+@Setter
 public class FileStorageConfig {
-    @Value("${file.upload-dir}")
-    private String uploadDir;
 
-    @PostConstruct
-    public void init() {
+    private Storage storage = new Storage();
+    private String allowedExtensions = "jpg,jpeg,png,gif,pdf,docx,xlsx,pptx,hwp,zip";
+    private int maxFileCount = 5;
 
-        try {
-            Path path = Paths.get(uploadDir);
+    @Getter
+    @Setter
+    public static class Storage {
+        private String type = "local";
+        private Local local = new Local();
+        private S3 s3 = new S3();
 
-            if (!Files.exists(path)) {
-                Files.createDirectories(path);
-            }
-
-            System.out.println("파일 저장 경로 생성 완료 : " + path.toAbsolutePath());
-
-        } catch (IOException e) {
-            throw new RuntimeException("파일 저장 폴더 생성 실패", e);
+        @Getter
+        @Setter
+        public static class Local {
+            private String uploadDir = "./uploads";
         }
+
+        @Getter
+        @Setter
+        public static class S3 {
+            private String bucket = "";
+            private String region = "ap-northeast-2";
+        }
+    }
+
+    public Set<String> getAllowedExtensionSet() {
+        return Arrays.stream(allowedExtensions.split(","))
+                .map(String::trim)
+                .collect(Collectors.toSet());
     }
 }

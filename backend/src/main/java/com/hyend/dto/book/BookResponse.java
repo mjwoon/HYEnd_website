@@ -1,5 +1,15 @@
 package com.hyend.dto.book;
 
-// TODO [H-1] 도서 응답 DTO 구현
-public record BookResponse() {
+import jakarta.validation.constraints.NotBlank;
+
+public record BookResponse(
+        Long bookId,
+        String title,
+        String author,
+        String category,
+        String summary,
+        String imageUrl,
+        boolean isAvailable
+)
+ {
 }
