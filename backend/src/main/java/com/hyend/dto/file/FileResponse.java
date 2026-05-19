@@ -1,10 +1,11 @@
 package com.hyend.dto.file;
 
-// TODO [H-1] 파일 업로드 응답 DTO 구현
-
+// 파일 업로드 응답 DTO
 public record FileResponse(
-        String fileId,
-        String fileName,
-        String fileUrl
+        String originalFilename,
+        String storedFilename,
+        String fileUrl,
+        long size,
+        String contentType
 ) {
 }
