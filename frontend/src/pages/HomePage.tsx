@@ -111,7 +111,12 @@ const Button = styled.button`
   font-style: normal;
   font-weight: 500;
   line-height: normal;
-  justify-content: center
+  justify-content: center;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
 `;
 
 const MenuItem = styled.div`
@@ -123,6 +128,11 @@ const MenuItem = styled.div`
   gap: 10px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
 `;
 
 const Bookitem = styled.div`
@@ -134,6 +144,13 @@ const Bookitem = styled.div`
   align-items: center;
   border-radius: 50px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.2s ease;
+
+  &:hover {
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.10);
+  }
 `;
 
 const BoardSection = styled.div`
@@ -155,6 +172,11 @@ const BoardCard = styled.div`
   border: 1px solid #40423F;
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(7px);
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.10);
+  }
 `;
 
 const BoardHeader = styled.div`
@@ -162,10 +184,19 @@ const BoardHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #FFF;
   border-bottom: 1px solid #40423F;
+`;
+
+const BoardTime = styled.span`
+  color: #676767;
+  font-family: "Pretendard Variable";
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
+  transition: color 0.2s ease;
 `;
 
 const BoardItem = styled.div`
@@ -175,15 +206,27 @@ const BoardItem = styled.div`
   font-size: 13px;
   color: #C0C2C0;
   padding: 0;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #FFF;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 13px;
+    padding: 0;
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-skip-ink: auto;
+    text-decoration-thickness: auto;
+    text-underline-offset: auto;
+  }
+  &:hover ${BoardTime} {   
+    color: #FFF;           
+  }
 `;
 
-const BoardTime = styled.span`
-  color: #676767;
-  font-family: "Pretendard Variable";
-  font-size: 12px;
-  font-weight: 500;
-  line-height: normal;
-`;
+
 
 export default function HomePage() {
   const boardItems = [
