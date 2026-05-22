@@ -5,7 +5,7 @@ const Wrapper = styled.div`
 `;
 
 const NoticeBar = styled.div`
-  display: flex;
+  display:  flex;
   width: 100%;
   padding: 12px 70px;
   align-items: center;
@@ -13,6 +13,19 @@ const NoticeBar = styled.div`
   background: rgba(249, 249, 249, 0.08);
   backdrop-filter: blur(5px);
 `;
+
+const NoticeLabel = styled.span`
+  color: #FFF;
+  text-align: center;
+  font-family: "Pretendard Variable";
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: -0.56px;
+`;
+
+
 const NoticeText = styled.span`
   color: #FFF;
   text-align: center;
@@ -21,6 +34,7 @@ const NoticeText = styled.span`
   font-style: normal;
   font-weight: 400;
   line-height: normal;
+  letter-spacing: -0.52px;
   text-decoration-line: underline;
   text-decoration-style: solid;
   text-decoration-skip-ink: auto;
@@ -31,9 +45,9 @@ const NoticeText = styled.span`
 
 const MainContent = styled.div`
   display: flex;
-  padding: 40px 70px;
+  padding: 40px 70px 40px 41px;
   align-items: flex-start;
-  gap: 30px;
+  gap: 41px;
 `;
 
 const ProfileCard = styled.div`
@@ -241,8 +255,8 @@ export default function HomePage() {
   return (
       <Wrapper>
         <NoticeBar>
-          <span>공지사항</span>
-          <NoticeText>📢 재학생 프로젝트 2차 과제 마감일 공지</NoticeText>
+          <NoticeLabel>공지사항</NoticeLabel>
+          <NoticeText>📢  재학생 프로젝트 2차 과제 마감일 공지</NoticeText>
         </NoticeBar>
         <MainContent>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
