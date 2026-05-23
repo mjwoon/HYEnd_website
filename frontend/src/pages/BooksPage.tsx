@@ -48,7 +48,7 @@ const CurrentLoanButton = styled.button`
 
 const ListSection = styled.div`
   display: inline-flex;
-  width: 1041px;
+  width: 1081px;
   padding: 20px; 
   flex-direction: column;
   align-items: flex-start;
@@ -63,8 +63,8 @@ const ListSection = styled.div`
 const ListHeader = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 16px;
+  margin-bottom: 0px;
   width: 100%;
 `;
 
@@ -84,12 +84,9 @@ const ListTitle = styled.h2`
   width: 100%;
 `;
 
-const Divider = styled.hr`
-  border: none;
-  margin: 0;
-`;
 
 const GuideLink = styled.span`
+  align-self: stretch;
   color: #FFF;
   font-family: "Pretendard Variable";
   font-size: 13px;
@@ -118,7 +115,7 @@ const BookCard = styled.div`
   gap: 16px;
   padding: 20px 36px;
   justify-content: center;
-  align-items: center;
+  align-items: center; 
   border-radius: 14px;
   border: 1px solid  #40423F;
   background: rgba(255, 255, 255, 0.02);
@@ -144,26 +141,28 @@ const BookCover = styled.div`
 const BookTitle = styled.p`
   color: #FFF;
   font-family: "Pretendard Variable";
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   text-align: center;
   margin: 0;
   line-height: 1.4;
+  word-break: keep-all;
 `;
 
 const BookAuthor = styled.p`
-  color: #C0C2C0;
+  color: #CCC;
+  text-align: center;
   font-family: "Pretendard Variable";
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
   margin: 0;
 `;
 
 const LoanStatus = styled.span`
   font-family: "Pretendard Variable";
-  font-size: 12px;
-  font-weight: 600;
-  color: ${({ available }) => (available ? '#4ADE80' : '#FF6B6B')};
+  font-size: 15px;
+  font-weight: 700;
+  color: ${({ available }) => (available ? '#5FFB7A' : '#EF4444')};
 `;
 
 export default function BookRentalPage() {
@@ -188,7 +187,6 @@ export default function BookRentalPage() {
         <ListSection>
           <ListHeader>
             <ListTitle>도서 목록</ListTitle>
-            <Divider />
             <GuideLink>🔎 도서 대여 방법 알아보기</GuideLink>
           </ListHeader>
 
@@ -199,10 +197,10 @@ export default function BookRentalPage() {
                   <BookInfo>
                     <BookTitle>{book.title}</BookTitle>
                     <BookAuthor>{book.author}</BookAuthor>
-                    <LoanStatus available={book.available}>
-                      📚 {book.available ? '대여 가능' : '대여 불가능'} 📚
-                    </LoanStatus>
                   </BookInfo>
+                    <LoanStatus available={book.available}>
+                      📖 {book.available ? '대여 가능' : '대여 불가능'} 📖
+                    </LoanStatus>
                 </BookCard>
             ))}
           </BookGrid>
