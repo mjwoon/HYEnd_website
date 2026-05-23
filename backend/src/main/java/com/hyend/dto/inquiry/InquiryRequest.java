@@ -7,7 +7,8 @@ public record InquiryRequest(
 
         @NotBlank @Size(max=100) String title,
         @NotBlank String content,
-        @NotBlank String category
+        @NotBlank String category,
+        Boolean isPrivate
 
 ) {
 }
