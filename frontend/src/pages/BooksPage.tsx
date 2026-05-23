@@ -1,6 +1,14 @@
 import styled from 'styled-components';
 import { useState } from 'react';
 
+interface Book {
+    id: number;
+    title: string;
+    author: string;
+    available: boolean;
+    tag: string;
+}
+
 const Wrapper = styled.div`
   color: white;
   min-height: 100vh;
@@ -317,7 +325,7 @@ const RentButton = styled.button`
 `;
 
 export default function BookRentalPage() {
-    const [selectedBook, setSelectedBook] = useState(null);
+    const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
     const books = [
         { id: 1, title: 'Android Studio를 활용한 안드로이드 프로그래밍 (9판)', author: '김땡땡', available: true, tag: 'BACK' },
@@ -365,7 +373,7 @@ export default function BookRentalPage() {
                         <ModalBookCover />
                         <ModalTitle>{selectedBook.title}</ModalTitle>
 
-                        <ModalInfoContainer>  {/* 👈 추가 */}
+                        <ModalInfoContainer>
                             <ModalInfoRow>
                                 <ModalTag>저자</ModalTag>
                                 <ModalValue>{selectedBook.author}</ModalValue>
@@ -401,7 +409,7 @@ export default function BookRentalPage() {
                             )}
                         </ModalInfoContainer>
 
-                        {selectedBook.available && (  // 👈 대여 가능일 때만 버튼 표시
+                        {selectedBook.available && (
                             <ModalButtonRow>
                                 <CancelButton onClick={() => setSelectedBook(null)}>취소</CancelButton>
                                 <RentButton>대여하기</RentButton>
