@@ -92,6 +92,6 @@ public class AuthService {
         User user = userRepository.getReferenceById(userId);
         refreshTokenRepository.save(RefreshToken.of(user, refreshToken, expiresAt));
 
-        return TokenResponse.of(accessToken, refreshToken, 15 * 60 * 1000L);
+        return TokenResponse.of(accessToken, refreshToken, jwtTokenProvider.getAccessTokenExpiryMs());
     }
 }
