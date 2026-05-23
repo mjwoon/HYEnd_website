@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { useState } from 'react';
+import { LoanStatusModal } from '../components/modals/LoanStatusModal';
 
 interface Book {
     id: number;
@@ -325,6 +326,7 @@ const RentButton = styled.button`
 `;
 
 export default function BookRentalPage() {
+    const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
     const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
     const books = [
@@ -342,7 +344,9 @@ export default function BookRentalPage() {
         <Wrapper>
             <HeroSection>
                 <Title>내 서재</Title>
-                <CurrentLoanButton>현재 대여중인 도서</CurrentLoanButton>
+                <CurrentLoanButton onClick={() => setIsLoanModalOpen(true)}>
+                    현재 대여중인 도서
+                </CurrentLoanButton>
             </HeroSection>
 
             <ListSection>
@@ -367,6 +371,7 @@ export default function BookRentalPage() {
                 </BookGrid>
             </ListSection>
 
+            {isLoanModalOpen && <LoanStatusModal onClose={() => setIsLoanModalOpen(false)} />}
             {selectedBook && (
                 <ModalOverlay onClick={() => setSelectedBook(null)}>
                     <ModalCard onClick={(e) => e.stopPropagation()}>
