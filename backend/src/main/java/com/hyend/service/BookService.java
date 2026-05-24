@@ -59,13 +59,18 @@ public class BookService {
                 .orElseThrow(() ->
                         new IllegalArgumentException("책을 찾을 수 없습니다."));
 
+        // 사용자 조회
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
         if (book.getAvailableCopies() <= 0) {
             throw new IllegalStateException("대출 가능한 재고가 없습니다.");
         }
 
         boolean alreadyRented =
                 rentalRepository.existsByUserIdAndBookIdAndStatus(
-                        request.userId(),
+                        user.getId(),
                         request.bookId(),
                         BookRental.RentalStatus.ACTIVE
                 );
@@ -74,10 +79,6 @@ public class BookService {
             throw new IllegalStateException("이미 대출 중인 책입니다.");
         }
 
-        // 사용자 조회
-        User user=userRepository.findByEmail(request.email())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         //대출 생성
         BookRental rental =
