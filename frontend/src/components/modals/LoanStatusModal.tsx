@@ -1,4 +1,6 @@
 import styled from 'styled-components';
+import { useState } from 'react';
+import { ExtendConfirmModal } from './ExtendConfirmModal';
 
 interface LoanBook {
     title: string;
@@ -160,8 +162,11 @@ interface Props {
 }
 
 export function LoanStatusModal({ onClose }: Props) {
+    const [isExtendOpen, setIsExtendOpen] = useState(false);
+    const [selectedLoan, setSelectedLoan] = useState<LoanBook | null>(null);
     return (
-        <Overlay onClick={onClose}>
+        <Overlay onClick={() => {
+            if (!isExtendOpen) onClose();}}>
             <Card onClick={(e) => e.stopPropagation()}>
                 <CardTitle>현재 대여중인 도서</CardTitle>
                 <Table>
@@ -175,7 +180,14 @@ export function LoanStatusModal({ onClose }: Props) {
                         <TableRow key={i}>
                             <BookTitle>{loan.title}</BookTitle>
                             <Period>{loan.period}</Period>
-                            <ExtendButton canExtend={loan.canExtend}>
+                            <ExtendButton
+                                canExtend={loan.canExtend}
+                                onClick={() => {
+                                    if (loan.canExtend) {
+                                        setSelectedLoan(loan);
+                                        setIsExtendOpen(true);
+                                    }
+                                }}>
                                 {loan.canExtend ? '대여 연장' : '연장 불가'}
                             </ExtendButton>
                             <CancelButton>대여 취소</CancelButton>
@@ -184,6 +196,12 @@ export function LoanStatusModal({ onClose }: Props) {
                 </Table>
                 <Notice>💡 각 도서는 최대 1회까지 연장 가능합니다.</Notice>
             </Card>
+            {isExtendOpen && (
+                <ExtendConfirmModal
+                    loan={selectedLoan}
+                    onClose={() => setIsExtendOpen(false)}
+                />
+            )}
         </Overlay>
     );
 }
