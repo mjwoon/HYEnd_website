@@ -5,6 +5,7 @@ import com.hyend.dto.book.RentRequest;
 import com.hyend.entity.Book;
 import com.hyend.entity.BookRental;
 import com.hyend.entity.User;
+import com.hyend.mapper.BookMapper;
 import com.hyend.repository.BookRentalRepository;
 import com.hyend.repository.BookRepository;
 import com.hyend.repository.UserRepository;
@@ -15,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -35,6 +35,9 @@ class BookServiceTest {
 
     @Mock
     UserRepository userRepository;
+
+    @Mock
+    BookMapper bookMapper;
 
     @InjectMocks
     BookService bookService;
@@ -68,6 +71,17 @@ class BookServiceTest {
 
         given(bookRentalRepository.save(any(BookRental.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
+
+        given(bookMapper.toResponse(any(BookRental.class)))
+                .willReturn(new RentalResponse(
+                        1L,
+                        "title",
+                        "author",
+                        "category",
+                        true,
+                        LocalDateTime.now(),
+                        LocalDateTime.now().plusDays(7)
+                ));
 
         assertThatCode(() ->
                 bookService.rentBook(request)
@@ -150,9 +164,6 @@ class BookServiceTest {
         given(rental.getBook())
                 .willReturn(book);
 
-        given(rental.getDueDate())
-                .willReturn(LocalDateTime.now().plusDays(1));
-
         assertThatCode(() ->
                 bookService.returnBook(1L)
         ).doesNotThrowAnyException();
@@ -176,8 +187,6 @@ class BookServiceTest {
         given(rental.getBook())
                 .willReturn(book);
 
-        given(rental.getDueDate())
-                .willReturn(LocalDateTime.now().minusDays(1));
 
         assertThatCode(() ->
                 bookService.returnBook(1L)
