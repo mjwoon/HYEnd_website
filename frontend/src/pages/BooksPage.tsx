@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { useState } from 'react';
 import { LoanStatusModal } from '../components/modals/LoanStatusModal';
+import { GuideModal } from '../components/modals/GuideModal';
 
 interface Book {
     id: number;
@@ -106,6 +107,7 @@ const GuideLink = styled.span`
   text-decoration-thickness: auto;
   text-underline-offset: auto;
   text-underline-position: from-font;
+  cursor: pointer;
 `;
 
 const BookGrid = styled.div`
@@ -328,6 +330,7 @@ const RentButton = styled.button`
 export default function BookRentalPage() {
     const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
     const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+    const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     const books = [
         { id: 1, title: 'Android Studio를 활용한 안드로이드 프로그래밍 (9판)', author: '김땡땡', available: true, tag: 'BACK' },
@@ -352,7 +355,7 @@ export default function BookRentalPage() {
             <ListSection>
                 <ListHeader>
                     <ListTitle>도서 목록</ListTitle>
-                    <GuideLink>🔎 도서 대여 방법 알아보기</GuideLink>
+                    <GuideLink onClick={() => setIsGuideOpen(true)}>🔎 도서 대여 방법 알아보기</GuideLink>
                 </ListHeader>
 
                 <BookGrid>
@@ -372,6 +375,7 @@ export default function BookRentalPage() {
             </ListSection>
 
             {isLoanModalOpen && <LoanStatusModal onClose={() => setIsLoanModalOpen(false)} />}
+            {isGuideOpen && <GuideModal onClose={() => setIsGuideOpen(false)} />}
             {selectedBook && (
                 <ModalOverlay onClick={() => setSelectedBook(null)}>
                     <ModalCard onClick={(e) => e.stopPropagation()}>

@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import bookIcon from '../../assets/📚.png';
 
 interface LoanBook {
     title: string;
@@ -35,17 +34,17 @@ const Card = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-`;
+  `;
 
 const IconWrapper = styled.div`
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #1E2A3A;
+  background: #4E2C2C;
   display: flex;
   justify-content: center;
   align-items: center;
-`;
+  `;
 
 const Title = styled.h2`
   font-family: "Pretendard Variable";
@@ -55,7 +54,7 @@ const Title = styled.h2`
   line-height: normal;
   margin: 0;
   text-align: center;
-`;
+  `;
 
 const ContentsWrapper=styled.p`
     display: flex;
@@ -85,15 +84,15 @@ const Description = styled.p`
   line-height: normal;
 `;
 
-const ExtendCount = styled.p`
-  font-family: "Pretendard Variable";
-  font-size: 10px;
-  color: #999;
-  text-align: center;
-  font-style: normal;
-  font-weight: 600;
-  line-height: normal;
-`;
+const Warning = styled.p`
+    font-family: "Pretendard Variable";
+    font-size: 10px;
+    color: #F87171;
+    text-align: center;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    `;
 
 const ButtonRow = styled.div`
   display: flex;
@@ -112,7 +111,7 @@ const CancelButton = styled.button`
   gap: 10px;
   border: 1px solid #5D625E;
   background: rgba(255,255,255,0.10);
-   color: #fff;
+  color: #fff;
   font-family: "Pretendard Variable";
   font-size: 14px;
   font-weight: 500;
@@ -133,7 +132,7 @@ const ConfirmButton = styled.button`
   align-items: center;
   gap: 10px;
   border: 1px solid #5D625E;
-  background: #2A6AEE;
+  background: #E12E2E;
   color: #fff;
   font-family: "Pretendard Variable";
   font-size: 14px;
@@ -143,24 +142,24 @@ const ConfirmButton = styled.button`
   letter-spacing: -0.56px;
 `;
 
-export function ExtendConfirmModal({ loan, onClose }: Props) {
+export function CancelConfirmModal({ loan, onClose }: Props) {
     if (!loan) return null;
 
     return (
         <Overlay>
             <Card>
                 <IconWrapper>
-                    <img src={bookIcon} width={48} height={48} />
+                    <span style={{ fontSize: '40px' }}>🗑️</span>
                 </IconWrapper>
-                <Title>대여 연장 확인</Title>
+                <Title>대여 취소 확인</Title>
                 <ContentsWrapper>
                     <BookTitle>"{loan.title}"</BookTitle>
-                    <Description>도서의 대여 기간을 2주 연장하시겠습니까?</Description>
-                    <ExtendCount>(연장 횟수: 0/1)</ExtendCount>
+                    <Description>도서의 대여를 취소하시겠습니까?</Description>
+                    <Warning>취소 후에는 다시 되돌릴 수 없습니다.</Warning>
                 </ContentsWrapper>
                 <ButtonRow>
                     <CancelButton onClick={onClose}>취소</CancelButton>
-                    <ConfirmButton>연장하기</ConfirmButton>
+                    <ConfirmButton>대여 취소</ConfirmButton>
                 </ButtonRow>
             </Card>
         </Overlay>
