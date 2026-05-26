@@ -40,7 +40,7 @@ const IconWrapper = styled.div`
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #1E2A3A;
+  background: #4E2C2C;
   display: flex;
   justify-content: center;
   align-items: center;

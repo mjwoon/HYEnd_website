@@ -112,7 +112,7 @@ const CancelButton = styled.button`
   gap: 10px;
   border: 1px solid #5D625E;
   background: rgba(255,255,255,0.10);
-  color: #fff;
+   color: #fff;
   font-family: "Pretendard Variable";
   font-size: 14px;
   font-weight: 500;
