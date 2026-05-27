@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type WheelEvent } from 'react';
 import styled from 'styled-components';
 
 type GalleryItem = {
@@ -42,18 +42,38 @@ const emptyGalleryItem: GalleryItem = {
 
 export default function GalleryPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const wheelLockRef = useRef(false);
 
   const visibleItems: GalleryItem[] = [
     galleryItems[currentIndex] ?? emptyGalleryItem,
     galleryItems[(currentIndex + 1) % galleryItems.length] ?? emptyGalleryItem,
   ];
 
+  const moveGallery = (direction: 1 | -1) => {
+    setCurrentIndex((prev) => (prev + direction + galleryItems.length) % galleryItems.length);
+  };
+
+  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
+    const isHorizontalSwipe = Math.abs(event.deltaX) > Math.abs(event.deltaY);
+    const swipeAmount = isHorizontalSwipe ? event.deltaX : event.deltaY;
+
+    if (Math.abs(swipeAmount) < 18 || wheelLockRef.current) return;
+
+    event.preventDefault();
+    wheelLockRef.current = true;
+    moveGallery(swipeAmount > 0 ? 1 : -1);
+
+    window.setTimeout(() => {
+      wheelLockRef.current = false;
+    }, 620);
+  };
+
   return (
     <Wrapper>
       <Content>
         <Title>ABOUT HY-END</Title>
 
-        <GalleryGrid>
+        <GalleryGrid onWheel={handleWheel}>
           {visibleItems.map((item, index) => (
             <GalleryCard key={`${currentIndex}-${index}`}>
               {item.isEmpty ? (
@@ -123,6 +143,7 @@ const GalleryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 88px;
+  transition: transform 0.45s ease, opacity 0.45s ease;
 `;
 
 const GalleryCard = styled.article`
@@ -136,6 +157,17 @@ const GalleryCard = styled.article`
   align-items: center;
   gap: 26px;
   backdrop-filter: blur(6px);
+  transition:
+    transform 0.45s ease,
+    opacity 0.45s ease,
+    border-color 0.45s ease,
+    background 0.45s ease;
+
+  &:hover {
+    transform: translateY(-6px);
+    border-color: rgba(85, 255, 116, 0.42);
+    background: rgba(255, 255, 255, 0.13);
+  }
 `;
 
 const ImageBox = styled.div`
@@ -151,6 +183,11 @@ const GalleryImage = styled.img`
   height: 100%;
   display: block;
   object-fit: cover;
+  transition: transform 0.6s ease;
+
+  ${GalleryCard}:hover & {
+    transform: scale(1.04);
+  }
 `;
 
 const TextBox = styled.div`
@@ -203,10 +240,19 @@ const DotButton = styled.button`
   background: transparent;
   padding: 0;
   cursor: pointer;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.18);
+  }
 
   &.active {
     border-color: #55ff74;
-    background: #55ff74;
+    background-color: #55ff74;
     box-shadow: 0 0 10px rgba(85, 255, 116, 0.8);
   }
 `;

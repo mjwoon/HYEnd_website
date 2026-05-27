@@ -102,7 +102,7 @@ export default function ExhibitionSection() {
 
     window.setTimeout(() => {
       wheelLockRef.current = false;
-    }, 420);
+    }, 620);
   };
 
   return (
@@ -132,6 +132,7 @@ export default function ExhibitionSection() {
                 zIndex: 10 - Math.abs(offset),
                 opacity: Math.abs(offset) === 2 ? 0.96 : 1,
                 cursor: isCenter ? "default" : "pointer",
+                willChange: "transform, opacity",
               }}
             >
               <ExhibitionCard item={item} />
@@ -195,7 +196,7 @@ const styles = {
     top: 0,
     left: "50%",
     marginLeft: -130,
-    transition: "transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
+    transition: "transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease",
   },
   card: {
     width: 260,
@@ -209,6 +210,7 @@ const styles = {
     padding: 14,
     boxShadow: "0 12px 30px rgba(0,0,0,0.42)",
     backdropFilter: "blur(2px)",
+    transition: "transform 0.45s ease, border 0.45s ease, background 0.45s ease, box-shadow 0.45s ease",
   },
   cardTag: {
     alignSelf: "flex-start",
@@ -236,6 +238,7 @@ const styles = {
     objectFit: "contain",
     backgroundColor: "rgba(0,0,0,0.18)",
     zIndex: 2,
+    transition: "transform 0.6s ease, opacity 0.3s ease",
   },
   imageFallback: {
     position: "absolute",
@@ -281,7 +284,7 @@ const styles = {
     border: "1px solid rgba(255,255,255,0.34)",
     cursor: "pointer",
     padding: 0,
-    transition: "background 0.25s, border 0.25s",
+    transition: "background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease",
   },
   dotOn: {
     background: NEON,
