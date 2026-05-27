@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties, type WheelEvent } from "react";
 
 const NEON = "#39ff6a";
 
@@ -82,8 +82,28 @@ function ExhibitionCard({ item }: { item: ExhibitionItem }) {
 
 export default function ExhibitionSection() {
   const [active, setActive] = useState(2);
+  const wheelLockRef = useRef(false);
   const count = exhibitionItems.length;
   const visible = Array.from({ length: 5 }, (_, i) => (active - 2 + i + count) % count);
+
+  const moveSlide = (direction: 1 | -1) => {
+    setActive((prev) => (prev + direction + count) % count);
+  };
+
+  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
+    const isHorizontalSwipe = Math.abs(event.deltaX) > Math.abs(event.deltaY);
+    const swipeAmount = isHorizontalSwipe ? event.deltaX : event.deltaY;
+
+    if (Math.abs(swipeAmount) < 18 || wheelLockRef.current) return;
+
+    event.preventDefault();
+    wheelLockRef.current = true;
+    moveSlide(swipeAmount > 0 ? 1 : -1);
+
+    window.setTimeout(() => {
+      wheelLockRef.current = false;
+    }, 420);
+  };
 
   return (
     <section style={styles.section}>
@@ -93,7 +113,7 @@ export default function ExhibitionSection() {
         <span>Exhibition Space</span>
       </h2>
 
-      <div style={styles.carouselWrap}>
+      <div style={styles.carouselWrap} onWheel={handleWheel}>
         {visible.map((itemIdx, pos) => {
           const item = exhibitionItems[itemIdx];
           if (!item) return null;
