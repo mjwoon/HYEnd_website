@@ -5,7 +5,8 @@ import {motion, AnimatePresence} from 'motion/react';
 import {useAuthStore} from '@/store/authStore';
 import {useModal} from '@/hooks/useModal';
 import Modal from '@/components/common/Modal';
-import JoinUsModal from '@/components/common/JoinUsModal';
+import SignUpModal from '@/components/common/SignUpModal.tsx';
+import LoginModal from '@/components/common/LoginModal.tsx';
 
 const Nav = styled.header`
     position: fixed;
@@ -134,86 +135,96 @@ export default function Header() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     const [openDropdown, setOpenDropdown] = useState<'about' | 'board' | null>(null);
     const joinUsModal = useModal();
+    const loginModal = useModal();
 
     const isAboutActive = pathname.startsWith('/about');
     const isBoardActive = pathname.startsWith('/board');
 
     return (
         <>
-        <Nav>
-            <Logo to="/">HY-END</Logo>
+            <Nav>
+                <Logo to="/">HY-END</Logo>
 
-            <NavLinks>
-                <NavItem>
-                    <NavLink to="/home" $active={pathname === '/home'}>
-                        Home
-                    </NavLink>
-                </NavItem>
+                <NavLinks>
+                    <NavItem>
+                        <NavLink to="/home" $active={pathname === '/home'}>
+                            Home
+                        </NavLink>
+                    </NavItem>
 
-                <NavItem
-                    onMouseEnter={() => setOpenDropdown('about')}
-                    onMouseLeave={() => setOpenDropdown(null)}
-                >
-                    <DropdownTrigger $active={isAboutActive}>About ▾</DropdownTrigger>
-                    <AnimatePresence>
-                        {openDropdown === 'about' && (
-                            <DropdownWrapper>
-                                <DropdownMenu
-                                    initial={{opacity: 0, y: -6}}
-                                    animate={{opacity: 1, y: 0}}
-                                    exit={{opacity: 0, y: -6}}
-                                    transition={{duration: 0.18}}
-                                >
-                                    {aboutItems.map((item) => (
-                                        <DropdownItem key={item.to} to={item.to} $active={pathname === item.to}>
-                                            {item.label}
-                                        </DropdownItem>
-                                    ))}
-                                </DropdownMenu>
-                            </DropdownWrapper>
-                        )}
-                    </AnimatePresence>
-                </NavItem>
+                    <NavItem
+                        onMouseEnter={() => setOpenDropdown('about')}
+                        onMouseLeave={() => setOpenDropdown(null)}
+                    >
+                        <DropdownTrigger $active={isAboutActive}>About ▾</DropdownTrigger>
+                        <AnimatePresence>
+                            {openDropdown === 'about' && (
+                                <DropdownWrapper>
+                                    <DropdownMenu
+                                        initial={{opacity: 0, y: -6}}
+                                        animate={{opacity: 1, y: 0}}
+                                        exit={{opacity: 0, y: -6}}
+                                        transition={{duration: 0.18}}
+                                    >
+                                        {aboutItems.map((item) => (
+                                            <DropdownItem key={item.to} to={item.to} $active={pathname === item.to}>
+                                                {item.label}
+                                            </DropdownItem>
+                                        ))}
+                                    </DropdownMenu>
+                                </DropdownWrapper>
+                            )}
+                        </AnimatePresence>
+                    </NavItem>
 
-                <NavItem
-                    onMouseEnter={() => setOpenDropdown('board')}
-                    onMouseLeave={() => setOpenDropdown(null)}
-                >
-                    <DropdownTrigger $active={isBoardActive}>Board ▾</DropdownTrigger>
-                    <AnimatePresence>
-                        {openDropdown === 'board' && (
-                            <DropdownWrapper>
-                                <DropdownMenu
-                                    initial={{opacity: 0, y: -6}}
-                                    animate={{opacity: 1, y: 0}}
-                                    exit={{opacity: 0, y: -6}}
-                                    transition={{duration: 0.18}}
-                                >
-                                    {boardItems.map((item) => (
-                                        <DropdownItem key={item.to} to={item.to} $active={pathname === item.to}>
-                                            {item.label}
-                                        </DropdownItem>
-                                    ))}
-                                </DropdownMenu>
-                            </DropdownWrapper>
-                        )}
-                    </AnimatePresence>
-                </NavItem>
+                    <NavItem
+                        onMouseEnter={() => setOpenDropdown('board')}
+                        onMouseLeave={() => setOpenDropdown(null)}
+                    >
+                        <DropdownTrigger $active={isBoardActive}>Board ▾</DropdownTrigger>
+                        <AnimatePresence>
+                            {openDropdown === 'board' && (
+                                <DropdownWrapper>
+                                    <DropdownMenu
+                                        initial={{opacity: 0, y: -6}}
+                                        animate={{opacity: 1, y: 0}}
+                                        exit={{opacity: 0, y: -6}}
+                                        transition={{duration: 0.18}}
+                                    >
+                                        {boardItems.map((item) => (
+                                            <DropdownItem key={item.to} to={item.to} $active={pathname === item.to}>
+                                                {item.label}
+                                            </DropdownItem>
+                                        ))}
+                                    </DropdownMenu>
+                                </DropdownWrapper>
+                            )}
+                        </AnimatePresence>
+                    </NavItem>
 
-                <NavItem>
-                    <NavLink to="/contact" $active={pathname === '/contact'}>
-                        Contact
-                    </NavLink>
-                </NavItem>
+                    <NavItem>
+                        <NavLink to="/contact" $active={pathname === '/contact'}>
+                            Contact
+                        </NavLink>
+                    </NavItem>
 
-                {!isAuthenticated && (
-                    <JoinUsButton onClick={joinUsModal.open}>Join Us →</JoinUsButton>
-                )}
-            </NavLinks>
-        </Nav>
-        <Modal isOpen={joinUsModal.isOpen} onClose={joinUsModal.close} blur>
-            <JoinUsModal onSwitchToLogin={joinUsModal.close} />
-        </Modal>
+                    {!isAuthenticated && (
+                        <JoinUsButton onClick={joinUsModal.open}>Join Us →</JoinUsButton>
+                    )}
+                </NavLinks>
+            </Nav>
+            <Modal isOpen={joinUsModal.isOpen} onClose={joinUsModal.close} blur>
+                <SignUpModal onSwitchToLogin={() => {
+                    joinUsModal.close();
+                    loginModal.open();
+                }}/>
+            </Modal>
+            <Modal isOpen={loginModal.isOpen} onClose={loginModal.close} blur>
+                <LoginModal onClose={loginModal.close} onSwitchToSignUp={() => {
+                    loginModal.close();
+                    joinUsModal.open();
+                }}/>
+            </Modal>
         </>
     );
 }
