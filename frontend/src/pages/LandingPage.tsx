@@ -7,6 +7,7 @@ import {useModal} from '@/hooks/useModal';
 import Modal from '@/components/common/Modal';
 import LoginModal from '@/components/common/LoginModal';
 import SignUpModal from '@/components/common/SignUpModal';
+import {useAuthStore} from '@/store/authStore';
 
 type SlideItem = {
     id: 'home' | 'introduce' | 'exhibition' | 'contact';
@@ -46,6 +47,7 @@ export default function LandingPage() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const loginModal = useModal();
     const signUpModal = useModal();
+    const isAuthenticated = useAuthStore(state => state.isAuthenticated);
     const currentSlide = slides[currentIndex]!;
 
     const goToPrevSlide = () => {
@@ -94,7 +96,7 @@ export default function LandingPage() {
                         <Highlight>{currentSlide.highlight}</Highlight>
                         <Description>{currentSlide.description}</Description>
 
-                        {currentSlide.id === 'home' && (
+                        {currentSlide.id === 'home' && !isAuthenticated && (
                             <ButtonGroup>
                                 <SmallButton type="button" onClick={loginModal.open}>로그인</SmallButton>
                                 <PrimaryButton type="button" onClick={signUpModal.open}>회원가입</PrimaryButton>

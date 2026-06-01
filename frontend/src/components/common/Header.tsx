@@ -146,11 +146,13 @@ export default function Header() {
                 <Logo to="/">HY-END</Logo>
 
                 <NavLinks>
-                    <NavItem>
-                        <NavLink to="/home" $active={pathname === '/home'}>
-                            Home
-                        </NavLink>
-                    </NavItem>
+                    {isAuthenticated && (
+                        <NavItem>
+                            <NavLink to="/home" $active={pathname === '/home'}>
+                                Home
+                            </NavLink>
+                        </NavItem>
+                    )}
 
                     <NavItem
                         onMouseEnter={() => setOpenDropdown('about')}
@@ -177,30 +179,32 @@ export default function Header() {
                         </AnimatePresence>
                     </NavItem>
 
-                    <NavItem
-                        onMouseEnter={() => setOpenDropdown('board')}
-                        onMouseLeave={() => setOpenDropdown(null)}
-                    >
-                        <DropdownTrigger $active={isBoardActive}>Board ▾</DropdownTrigger>
-                        <AnimatePresence>
-                            {openDropdown === 'board' && (
-                                <DropdownWrapper>
-                                    <DropdownMenu
-                                        initial={{opacity: 0, y: -6}}
-                                        animate={{opacity: 1, y: 0}}
-                                        exit={{opacity: 0, y: -6}}
-                                        transition={{duration: 0.18}}
-                                    >
-                                        {boardItems.map((item) => (
-                                            <DropdownItem key={item.to} to={item.to} $active={pathname === item.to}>
-                                                {item.label}
-                                            </DropdownItem>
-                                        ))}
-                                    </DropdownMenu>
-                                </DropdownWrapper>
-                            )}
-                        </AnimatePresence>
-                    </NavItem>
+                    {isAuthenticated && (
+                        <NavItem
+                            onMouseEnter={() => setOpenDropdown('board')}
+                            onMouseLeave={() => setOpenDropdown(null)}
+                        >
+                            <DropdownTrigger $active={isBoardActive}>Board ▾</DropdownTrigger>
+                            <AnimatePresence>
+                                {openDropdown === 'board' && (
+                                    <DropdownWrapper>
+                                        <DropdownMenu
+                                            initial={{opacity: 0, y: -6}}
+                                            animate={{opacity: 1, y: 0}}
+                                            exit={{opacity: 0, y: -6}}
+                                            transition={{duration: 0.18}}
+                                        >
+                                            {boardItems.map((item) => (
+                                                <DropdownItem key={item.to} to={item.to} $active={pathname === item.to}>
+                                                    {item.label}
+                                                </DropdownItem>
+                                            ))}
+                                        </DropdownMenu>
+                                    </DropdownWrapper>
+                                )}
+                            </AnimatePresence>
+                        </NavItem>
+                    )}
 
                     <NavItem>
                         <NavLink to="/contact" $active={pathname === '/contact'}>
