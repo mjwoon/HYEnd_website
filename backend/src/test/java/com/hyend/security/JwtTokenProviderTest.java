@@ -19,7 +19,7 @@ class JwtTokenProviderTest {
 
     @BeforeEach
     void setUp() {
-        jwtTokenProvider = new JwtTokenProvider(testSecret);
+        jwtTokenProvider = new JwtTokenProvider(testSecret, 900_000L, 604_800_000L);
     }
 
     @Test

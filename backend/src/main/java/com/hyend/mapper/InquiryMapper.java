@@ -9,8 +9,8 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel="spring")
 public interface InquiryMapper {
     @org.mapstruct.Mapping(source = "id", target = "inquiryId")
-    @org.mapstruct.Mapping(target = "category", ignore = true)
     @org.mapstruct.Mapping(source = "author.name", target = "author")
+    @org.mapstruct.Mapping(expression = "java(inquiry.getStatus().name())", target = "status")
     InquiryResponse toResponse(Inquiry inquiry);
 
     @org.mapstruct.Mapping(source = "id", target = "replyId")

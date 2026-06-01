@@ -29,7 +29,7 @@ class EventServiceTest {
     @InjectMocks EventService eventService;
 
     private EventRequest sampleRequest() {
-        return new EventRequest("행사 제목", "행사 설명", "장소", LocalDateTime.now(), LocalDateTime.now().plusDays(1), null);
+        return new EventRequest("행사 제목", "행사 설명", "장소", LocalDateTime.now(), LocalDateTime.now().plusDays(1));
     }
 
     @Test

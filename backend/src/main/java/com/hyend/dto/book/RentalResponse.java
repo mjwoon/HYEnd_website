@@ -7,7 +7,6 @@ public record RentalResponse(
         Long bookId,
         String title,
         String author,
-        String category,
         boolean isAvailable,
         boolean canExtend,
         LocalDateTime startDate,

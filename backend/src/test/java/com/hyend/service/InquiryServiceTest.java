@@ -100,7 +100,7 @@ class InquiryServiceTest {
     @Test
     @DisplayName("문의 생성 - 성공")
     void createInquiry_success() {
-        InquiryRequest request = new InquiryRequest("제목", "내용", "일반", false);
+        InquiryRequest request = new InquiryRequest("제목", "내용", false);
         User author = mock(User.class);
 
         given(userRepository.findById(1L)).willReturn(Optional.of(author));
@@ -142,7 +142,7 @@ class InquiryServiceTest {
         given(inquiry.getAuthor()).willReturn(owner);
         given(owner.getId()).willReturn(1L);
 
-        InquiryRequest request = new InquiryRequest("수정", "내용", "일반", false);
+        InquiryRequest request = new InquiryRequest("수정", "내용", false);
 
         assertThatThrownBy(() -> inquiryService.updateInquiry(1L, request, 2L))
                 .isInstanceOf(BusinessException.class);

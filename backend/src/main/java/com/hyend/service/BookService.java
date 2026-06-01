@@ -12,6 +12,7 @@ import com.hyend.repository.BookRentalRepository;
 import com.hyend.repository.BookRepository;
 import com.hyend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,12 @@ public class BookService {
     private final BookRentalRepository rentalRepository;
     private final BookMapper bookMapper;
     private final UserRepository userRepository;
+
+    @Value("${book.rental-days:7}")
+    private int rentalDays;
+
+    @Value("${book.extension-days:7}")
+    private int extensionDays;
 
     @Cacheable(value = "books")
     public List<BookResponse> getAllBooks() {
@@ -59,7 +66,7 @@ public class BookService {
             throw new BusinessException(ErrorCode.ALREADY_RENTED);
         }
 
-        BookRental rental = BookRental.of(book, user, LocalDateTime.now().plusDays(7));
+        BookRental rental = BookRental.of(book, user, LocalDateTime.now().plusDays(rentalDays));
         book.decreaseAvailable();
         return bookMapper.toResponse(rentalRepository.save(rental));
     }
@@ -93,7 +100,7 @@ public class BookService {
         if (!rental.canExtend()) {
             throw new BusinessException(ErrorCode.RENTAL_EXTEND_NOT_ALLOWED);
         }
-        rental.extend();
+        rental.extend(extensionDays);
         return bookMapper.toResponse(rental);
     }
 

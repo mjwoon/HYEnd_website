@@ -62,8 +62,8 @@ public class BookRental extends BaseTimeEntity {
         this.status = RentalStatus.RETURNED;
     }
 
-    public void extend() {
-        this.dueDate = this.dueDate.plusDays(7);
+    public void extend(int days) {
+        this.dueDate = this.dueDate.plusDays(days);
         this.extended = true;
     }
 

@@ -30,6 +30,12 @@ spring:
 # base64("testSecretKeyForTestingPurposesOnlyDoNotUseInProduction") — 55바이트 > HS256 최소 32바이트
 jwt:
   secret: dGVzdFNlY3JldEtleUZvclRlc3RpbmdQdXJwb3Nlc09ubHlEb05vdFVzZUluUHJvZHVjdGlvbg==
+  access-token-expiry: 900000
+  refresh-token-expiry: 604800000
+
+book:
+  rental-days: 7
+  extension-days: 7
 
 file:
   storage:

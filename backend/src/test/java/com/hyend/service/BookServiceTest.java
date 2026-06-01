@@ -43,7 +43,7 @@ class BookServiceTest {
         given(bookRentalRepository.existsByUserIdAndBookIdAndStatus(any(), any(), any())).willReturn(false);
         given(bookRentalRepository.save(any(BookRental.class))).willAnswer(i -> i.getArgument(0));
         given(bookMapper.toResponse(any(BookRental.class))).willReturn(
-                new RentalResponse(1L, 1L, "title", "author", "category", true, false,
+                new RentalResponse(1L, 1L, "title", "author", true, false,
                         LocalDateTime.now(), LocalDateTime.now().plusDays(7)));
 
         assertThatCode(() -> bookService.rentBook(1L, 1L)).doesNotThrowAnyException();

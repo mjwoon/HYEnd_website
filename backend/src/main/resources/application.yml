@@ -24,6 +24,12 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
+  access-token-expiry: 900000      # 15분 (ms)
+  refresh-token-expiry: 604800000  # 7일 (ms)
+
+book:
+  rental-days: 7
+  extension-days: 7
 
 # 파일 저장소 설정
 file:

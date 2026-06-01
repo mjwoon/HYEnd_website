@@ -13,6 +13,8 @@ spring:
 jwt:
   # 개발용 전용 시크릿 (Base64, 256bit 이상) — 운영 환경에서는 반드시 JWT_SECRET 환경변수로 교체
   secret: ${JWT_SECRET:aHllbmQtZGV2LXNlY3JldC1rZXktZm9yLWxvY2FsLWRldmVsb3BtZW50LW9ubHktbm90LWZvci1wcm9kdWN0aW9u}
+  access-token-expiry: 900000
+  refresh-token-expiry: 604800000
 
 logging:
   level:
