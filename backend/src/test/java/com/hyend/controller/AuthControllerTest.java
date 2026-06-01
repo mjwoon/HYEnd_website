@@ -3,6 +3,7 @@ package com.hyend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hyend.common.ErrorCode;
 import com.hyend.dto.auth.*;
+import com.hyend.dto.user.UserResponse;
 import com.hyend.entity.User;
 import com.hyend.exception.BusinessException;
 import com.hyend.exception.GlobalExceptionHandler;
@@ -27,6 +28,7 @@ import java.util.Collections;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -157,5 +159,25 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value("로그아웃 되었습니다."));
 
         then(authService).should().logout(1L);
+    }
+
+    // ─── me ───────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("GET /api/auth/me - 200 OK")
+    void me_success() throws Exception {
+        UserPrincipal principal = mock(UserPrincipal.class);
+        given(principal.getId()).willReturn(1L);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, Collections.emptyList()));
+
+        UserResponse response = new UserResponse(1L, "me@hyend.ac.kr", "홍길동", User.Role.STUDENT, true);
+        given(userService.getMe(1L)).willReturn(response);
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.email").value("me@hyend.ac.kr"))
+                .andExpect(jsonPath("$.data.name").value("홍길동"));
     }
 }

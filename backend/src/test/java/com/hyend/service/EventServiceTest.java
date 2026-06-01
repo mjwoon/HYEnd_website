@@ -26,6 +26,7 @@ class EventServiceTest {
 
     @Mock EventRepository eventRepository;
     @Mock UserRepository userRepository;
+    @Mock AttachmentService attachmentService;
     @InjectMocks EventService eventService;
 
     private EventRequest sampleRequest() {

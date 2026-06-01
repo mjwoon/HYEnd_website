@@ -26,6 +26,7 @@ class InquiryServiceTest {
     @Mock InquiryRepository inquiryRepository;
     @Mock InquiryReplyRepository replyRepository;
     @Mock UserRepository userRepository;
+    @Mock AttachmentService attachmentService;
     @InjectMocks InquiryService inquiryService;
 
     @Test

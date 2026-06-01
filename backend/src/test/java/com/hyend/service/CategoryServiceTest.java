@@ -82,4 +82,42 @@ class CategoryServiceTest {
         assertThatThrownBy(() -> categoryService.deleteCategory(99L))
                 .isInstanceOf(BusinessException.class);
     }
+
+    @Test
+    @DisplayName("카테고리 수정 - 성공")
+    void updateCategory_success() {
+        Category cat = mock(Category.class);
+        CategoryRequest request = new CategoryRequest("수정명", "수정설명");
+        given(categoryRepository.findById(1L)).willReturn(Optional.of(cat));
+        given(cat.getName()).willReturn("원래명");
+        given(categoryRepository.existsByName("수정명")).willReturn(false);
+
+        assertThatCode(() -> categoryService.updateCategory(1L, request)).doesNotThrowAnyException();
+        then(cat).should().update("수정명", "수정설명");
+    }
+
+    @Test
+    @DisplayName("카테고리 수정 - 이름 중복")
+    void updateCategory_duplicateName() {
+        Category cat = mock(Category.class);
+        CategoryRequest request = new CategoryRequest("중복명", "설명");
+        given(categoryRepository.findById(1L)).willReturn(Optional.of(cat));
+        given(cat.getName()).willReturn("원래명");
+        given(categoryRepository.existsByName("중복명")).willReturn(true);
+
+        assertThatThrownBy(() -> categoryService.updateCategory(1L, request))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("카테고리 수정 - 같은 이름으로 수정 시 중복 체크 생략")
+    void updateCategory_sameName_noDuplicateCheck() {
+        Category cat = mock(Category.class);
+        CategoryRequest request = new CategoryRequest("같은명", "새설명");
+        given(categoryRepository.findById(1L)).willReturn(Optional.of(cat));
+        given(cat.getName()).willReturn("같은명");
+
+        assertThatCode(() -> categoryService.updateCategory(1L, request)).doesNotThrowAnyException();
+        then(categoryRepository).should(never()).existsByName(any());
+    }
 }

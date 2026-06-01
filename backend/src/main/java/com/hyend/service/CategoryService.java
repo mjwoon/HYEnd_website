@@ -47,6 +47,17 @@ public class CategoryService {
 
     @Transactional
     @CacheEvict(value = "categories", allEntries = true)
+    public CategoryResponse updateCategory(Long id, CategoryRequest request) {
+        Category category = findCategoryById(id);
+        if (!category.getName().equals(request.name()) && categoryRepository.existsByName(request.name())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_CATEGORY);
+        }
+        category.update(request.name(), request.description());
+        return toResponse(category);
+    }
+
+    @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public void deleteCategory(Long id) {
         categoryRepository.delete(findCategoryById(id));
     }

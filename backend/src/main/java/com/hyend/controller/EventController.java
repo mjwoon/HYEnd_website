@@ -3,6 +3,7 @@ package com.hyend.controller;
 import com.hyend.common.ApiResponse;
 import com.hyend.dto.event.EventRequest;
 import com.hyend.dto.event.EventResponse;
+import com.hyend.dto.file.AttachmentResponse;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -62,5 +63,11 @@ public class EventController {
     public ApiResponse<Void> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
         return ApiResponse.ok("행사가 삭제되었습니다.");
+    }
+
+    @Operation(summary = "행사 첨부파일 목록")
+    @GetMapping("/{id}/attachments")
+    public ApiResponse<List<AttachmentResponse>> getAttachments(@PathVariable Long id) {
+        return ApiResponse.ok(eventService.getAttachments(id));
     }
 }

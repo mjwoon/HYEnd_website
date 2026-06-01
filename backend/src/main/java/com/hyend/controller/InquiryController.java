@@ -1,6 +1,7 @@
 package com.hyend.controller;
 
 import com.hyend.common.ApiResponse;
+import com.hyend.dto.file.AttachmentResponse;
 import com.hyend.dto.inquiry.InquiryRequest;
 import com.hyend.dto.inquiry.InquiryResponse;
 import com.hyend.dto.inquiry.ReplyRequest;
@@ -107,5 +108,14 @@ public class InquiryController {
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         return ApiResponse.ok(inquiryService.createReply(inquiryId, request, principal.getId()));
+    }
+
+    @Operation(summary = "문의 첨부파일 목록")
+    @GetMapping("/{inquiryId}/attachments")
+    public ApiResponse<List<AttachmentResponse>> getAttachments(
+            @PathVariable Long inquiryId,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        return ApiResponse.ok(inquiryService.getAttachments(inquiryId, principal.getId()));
     }
 }

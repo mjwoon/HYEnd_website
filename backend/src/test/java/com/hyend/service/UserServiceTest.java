@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -71,6 +72,33 @@ class UserServiceTest {
         given(userRepository.findById(99L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.updateRole(99L, User.Role.STAFF))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("내 정보 조회 - 성공")
+    void getMe_success() {
+        User user = mock(User.class);
+        given(user.getId()).willReturn(1L);
+        given(user.getEmail()).willReturn("me@hyend.ac.kr");
+        given(user.getName()).willReturn("홍길동");
+        given(user.getRole()).willReturn(User.Role.STUDENT);
+        given(user.isActive()).willReturn(true);
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+
+        UserResponse result = userService.getMe(1L);
+
+        assertThat(result.email()).isEqualTo("me@hyend.ac.kr");
+        assertThat(result.name()).isEqualTo("홍길동");
+    }
+
+    @Test
+    @DisplayName("내 정보 조회 - 존재하지 않는 사용자")
+    void getMe_notFound() {
+        given(userRepository.findById(99L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.getMe(99L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
     }

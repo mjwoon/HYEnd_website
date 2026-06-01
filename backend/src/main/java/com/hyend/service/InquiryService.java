@@ -1,10 +1,12 @@
 package com.hyend.service;
 
 import com.hyend.common.ErrorCode;
+import com.hyend.dto.file.AttachmentResponse;
 import com.hyend.dto.inquiry.InquiryRequest;
 import com.hyend.dto.inquiry.InquiryResponse;
 import com.hyend.dto.inquiry.ReplyRequest;
 import com.hyend.dto.inquiry.ReplyResponse;
+import com.hyend.entity.Attachment;
 import com.hyend.entity.Inquiry;
 import com.hyend.entity.InquiryReply;
 import com.hyend.entity.User;
@@ -26,6 +28,7 @@ public class InquiryService {
     private final InquiryRepository inquiryRepository;
     private final InquiryReplyRepository replyRepository;
     private final UserRepository userRepository;
+    private final AttachmentService attachmentService;
 
     public InquiryResponse getInquiry(Long inquiryId, Long requesterId) {
         Inquiry inquiry = findInquiry(inquiryId);
@@ -62,7 +65,15 @@ public class InquiryService {
         Inquiry inquiry = findInquiry(inquiryId);
         validateOwner(inquiry, requesterId);
         validateOpen(inquiry);
+        attachmentService.deleteByEntity(Attachment.EntityType.INQUIRY, inquiryId);
         inquiryRepository.delete(inquiry);
+    }
+
+    public List<AttachmentResponse> getAttachments(Long inquiryId, Long requesterId) {
+        Inquiry inquiry = findInquiry(inquiryId);
+        User requester = findUser(requesterId);
+        validateReadPermission(inquiry, requester);
+        return attachmentService.findByEntity(Attachment.EntityType.INQUIRY, inquiryId);
     }
 
     @Transactional

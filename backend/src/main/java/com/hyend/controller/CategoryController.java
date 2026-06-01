@@ -42,6 +42,15 @@ public class CategoryController {
         return ApiResponse.ok(categoryService.getCategoryByName(name));
     }
 
+    @Operation(summary = "카테고리 수정")
+    @PutMapping("/{categoryId}")
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<CategoryResponse> updateCategory(
+            @PathVariable Long categoryId,
+            @Valid @RequestBody CategoryRequest request) {
+        return ApiResponse.ok(categoryService.updateCategory(categoryId, request));
+    }
+
     @Operation(summary = "카테고리 삭제")
     @DeleteMapping("/{categoryId}")
     @SecurityRequirement(name = "bearerAuth")

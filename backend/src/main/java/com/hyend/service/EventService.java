@@ -3,6 +3,8 @@ package com.hyend.service;
 import com.hyend.common.ErrorCode;
 import com.hyend.dto.event.EventRequest;
 import com.hyend.dto.event.EventResponse;
+import com.hyend.dto.file.AttachmentResponse;
+import com.hyend.entity.Attachment;
 import com.hyend.entity.Event;
 import com.hyend.entity.User;
 import com.hyend.exception.BusinessException;
@@ -22,6 +24,7 @@ import java.util.List;
 public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final AttachmentService attachmentService;
 
     @Transactional
     @CacheEvict(value = "events", allEntries = true)
@@ -68,7 +71,13 @@ public class EventService {
     @Transactional
     @CacheEvict(value = "events", allEntries = true)
     public void deleteEvent(Long id) {
+        attachmentService.deleteByEntity(Attachment.EntityType.EVENT, id);
         eventRepository.delete(findEventById(id));
+    }
+
+    public List<AttachmentResponse> getAttachments(Long id) {
+        findEventById(id);
+        return attachmentService.findByEntity(Attachment.EntityType.EVENT, id);
     }
 
     private Event findEventById(Long id) {

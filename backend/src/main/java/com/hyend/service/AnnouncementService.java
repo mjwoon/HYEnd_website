@@ -93,6 +93,7 @@ public class AnnouncementService {
     @Transactional
     @CacheEvict(value = "announcements", allEntries = true)
     public void delete(Long id) {
+        attachmentService.deleteByEntity(Attachment.EntityType.ANNOUNCEMENT, id);
         announcementRepository.delete(find(id));
     }
 
