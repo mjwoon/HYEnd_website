@@ -6,14 +6,22 @@ import com.hyend.entity.User;
 import com.hyend.exception.BusinessException;
 import com.hyend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
+
+    public Page<UserResponse> getUsers(User.Role role, String keyword, Pageable pageable) {
+        return userRepository.findAllWithFilter(role, keyword, pageable)
+                .map(UserResponse::from);
+    }
 
     @Transactional
     public UserResponse updateRole(Long userId, User.Role role) {
