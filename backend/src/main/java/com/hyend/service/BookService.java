@@ -20,7 +20,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// TODO [H-7] 도서 서비스 구현 (대출/반납/재고 로직)
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

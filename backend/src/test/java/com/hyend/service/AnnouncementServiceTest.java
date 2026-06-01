@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 
-// TODO [H-9] AnnouncementService 단위 테스트 작성 (AuthServiceTest 패턴 참고)
 @ExtendWith(MockitoExtension.class)
 class AnnouncementServiceTest {
 

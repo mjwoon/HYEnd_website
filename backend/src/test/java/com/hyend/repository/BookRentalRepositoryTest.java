@@ -11,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
-// TODO [H-9] BookRentalRepository 통합 테스트 작성
 @ExtendWith(MockitoExtension.class)
 class BookRentalRepositoryTest {
 

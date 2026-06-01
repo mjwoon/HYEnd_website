@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// TODO [H-5] 카테고리 컨트롤러 구현
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
