@@ -50,11 +50,15 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/announcements/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/events/**").hasRole("ADMIN")
 
-                // STAFF 이상: 공지/행사 작성·수정
+                // STAFF 이상: 공지/행사 작성·수정, 공모전 게시판 작성·수정·삭제
                 .requestMatchers(HttpMethod.POST, "/api/announcements").hasAnyRole("STAFF", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/announcements/**").hasAnyRole("STAFF", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/events").hasAnyRole("STAFF", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/events/**").hasAnyRole("STAFF", "ADMIN")
+
+                // 공모전 게시판 조회는 공개, 작성·수정·삭제는 STAFF·ADMIN
+                .requestMatchers(HttpMethod.GET, "/api/posts").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
 
                 // 나머지는 인증 필요
                 .anyRequest().authenticated()
