@@ -1,14 +1,20 @@
 package com.hyend.controller;
 
+import com.hyend.common.ApiResponse;
 import com.hyend.dto.category.CategoryRequest;
 import com.hyend.dto.category.CategoryResponse;
 import com.hyend.service.CategoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Categories", description = "카테고리 API")
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
@@ -16,38 +22,31 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    //카테고리 생성
+    @Operation(summary = "카테고리 생성")
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(
-            @RequestBody CategoryRequest request
-    ){
-        return ResponseEntity.ok(
-                categoryService.createCategory(request)
-        );
+    @ResponseStatus(HttpStatus.CREATED)
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
+        return ApiResponse.ok(categoryService.createCategory(request));
     }
 
-    //전체 조회
+    @Operation(summary = "카테고리 전체 조회")
     @GetMapping
-    public ResponseEntity<List<CategoryResponse>> getAllCategories() {
-        return ResponseEntity.ok(
-                categoryService.getAllCategories()
-        );
+    public ApiResponse<List<CategoryResponse>> getAllCategories() {
+        return ApiResponse.ok(categoryService.getAllCategories());
     }
-    //단건 조회
+
+    @Operation(summary = "카테고리 단건 조회")
     @GetMapping("/{name}")
-    public ResponseEntity<CategoryResponse> getCategoryByName(
-            @PathVariable String name
-    ){
-        return ResponseEntity.ok(
-                categoryService.getCategoryByName(name)
-        );
+    public ApiResponse<CategoryResponse> getCategoryByName(@PathVariable String name) {
+        return ApiResponse.ok(categoryService.getCategoryByName(name));
     }
-    //삭제
+
+    @Operation(summary = "카테고리 삭제")
     @DeleteMapping("/{categoryId}")
-    public ResponseEntity<Void> deleteCategory(
-            @PathVariable Long categoryId
-    ){
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<Void> deleteCategory(@PathVariable Long categoryId) {
         categoryService.deleteCategory(categoryId);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.ok("카테고리가 삭제되었습니다.");
     }
 }

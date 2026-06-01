@@ -5,6 +5,7 @@ import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.entity.Announcement;
 import com.hyend.entity.Category;
 import com.hyend.entity.User;
+import com.hyend.exception.BusinessException;
 import com.hyend.repository.AnnouncementRepository;
 import com.hyend.repository.CategoryRepository;
 import com.hyend.repository.UserRepository;
@@ -24,162 +25,90 @@ import static org.mockito.BDDMockito.*;
 @ExtendWith(MockitoExtension.class)
 class AnnouncementServiceTest {
 
-    @Mock
-    AnnouncementRepository announcementRepository;
-
-    @Mock
-    UserRepository userRepository;
-
-    @Mock
-    CategoryRepository categoryRepository;
-
-    @InjectMocks
-    AnnouncementService announcementService;
-
-
-
-    // 공지 생성
+    @Mock AnnouncementRepository announcementRepository;
+    @Mock UserRepository userRepository;
+    @Mock CategoryRepository categoryRepository;
+    @InjectMocks AnnouncementService announcementService;
 
     @Test
     @DisplayName("공지사항 생성 - 성공")
     void createAnnouncement_success() {
-
-        AnnouncementRequest request =
-                new AnnouncementRequest(
-                        "공지 제목",
-                        "공지 내용",
-                        "GENERAL",
-                        true
-                );
-
+        AnnouncementRequest request = new AnnouncementRequest("공지 제목", "공지 내용", "GENERAL", true);
         User author = mock(User.class);
+        Category category = mock(Category.class);
 
-        given(userRepository.findById(1L))
-                .willReturn(Optional.of(author));
+        given(userRepository.findById(1L)).willReturn(Optional.of(author));
+        given(categoryRepository.findByName("GENERAL")).willReturn(Optional.of(category));
+        given(announcementRepository.save(any(Announcement.class))).willAnswer(i -> i.getArgument(0));
 
-        given(announcementRepository.save(any(Announcement.class)))
-                .willAnswer(invocation -> invocation.getArgument(0));
-
-        assertThatCode(() ->
-                announcementService.create(request, 1L)
-        ).doesNotThrowAnyException();
-
-        then(announcementRepository)
-                .should()
-                .save(any(Announcement.class));
+        assertThatCode(() -> announcementService.create(request, 1L)).doesNotThrowAnyException();
+        then(announcementRepository).should().save(any(Announcement.class));
     }
-
-    // 공지 생성 실패
 
     @Test
     @DisplayName("공지사항 생성 - 사용자 없음")
     void createAnnouncement_userNotFound() {
+        AnnouncementRequest request = new AnnouncementRequest("공지 제목", "공지 내용", "GENERAL", false);
 
-        AnnouncementRequest request =
-                new AnnouncementRequest(
-                        "공지 제목",
-                        "공지 내용",
-                        "GENERAL",
-                        false
-                );
+        given(userRepository.findById(1L)).willReturn(Optional.empty());
 
-        given(userRepository.findById(1L))
-                .willReturn(Optional.empty());
-
-        assertThatThrownBy(() ->
-                announcementService.create(request, 1L)
-        ).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("사용자를 찾을 수 없습니다.");
+        assertThatThrownBy(() -> announcementService.create(request, 1L))
+                .isInstanceOf(BusinessException.class);
     }
-
-    //공지 조회
 
     @Test
     @DisplayName("공지사항 조회 - 성공")
     void getAnnouncement_success() {
-
         Announcement announcement = mock(Announcement.class);
+        Category category = mock(Category.class);
+        User author = mock(User.class);
 
-        given(announcementRepository.findById(1L))
-                .willReturn(Optional.of(announcement));
+        given(announcementRepository.findById(1L)).willReturn(Optional.of(announcement));
+        given(announcement.getCategory()).willReturn(category);
+        given(announcement.getAuthor()).willReturn(author);
+        given(category.getName()).willReturn("GENERAL");
+        given(author.getName()).willReturn("관리자");
 
-        assertThatCode(() ->
-                announcementService.getDetail(1L)
-        ).doesNotThrowAnyException();
-
-        then(announcementRepository)
-                .should()
-                .findById(1L);
+        assertThatCode(() -> announcementService.getDetail(1L)).doesNotThrowAnyException();
+        then(announcementRepository).should().findById(1L);
     }
-
-    // 공지 조회 실패
 
     @Test
     @DisplayName("공지사항 조회 - 존재하지 않음")
     void getAnnouncement_notFound() {
+        given(announcementRepository.findById(1L)).willReturn(Optional.empty());
 
-        given(announcementRepository.findById(1L))
-                .willReturn(Optional.empty());
-
-        assertThatThrownBy(() ->
-                announcementService.getDetail(1L)
-        ).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("공지사항을 찾을 수 없습니다.");
+        assertThatThrownBy(() -> announcementService.getDetail(1L))
+                .isInstanceOf(BusinessException.class);
     }
-
-    // 공지 수정
 
     @Test
     @DisplayName("공지사항 수정 - 성공")
     void updateAnnouncement_success() {
-
         Announcement announcement = mock(Announcement.class);
-
-        AnnouncementRequest request =
-                new AnnouncementRequest(
-                        "수정 제목",
-                        "수정 내용",
-                        "EVENT",
-                        false
-                );
+        AnnouncementRequest request = new AnnouncementRequest("수정 제목", "수정 내용", "EVENT", false);
         Category category = mock(Category.class);
+        User author = mock(User.class);
 
-        given(categoryRepository.findByName(request.category()))
-                .willReturn(Optional.of(category));
+        given(announcementRepository.findById(1L)).willReturn(Optional.of(announcement));
+        given(categoryRepository.findByName(request.category())).willReturn(Optional.of(category));
+        given(announcement.getCategory()).willReturn(category);
+        given(announcement.getAuthor()).willReturn(author);
+        given(category.getName()).willReturn("EVENT");
+        given(author.getName()).willReturn("관리자");
 
-        given(announcementRepository.findById(1L))
-                .willReturn(Optional.of(announcement));
-
-        assertThatCode(() ->
-                announcementService.update(1L, request)
-        ).doesNotThrowAnyException();
-
-        then(announcement)
-                .should()
-                .update(
-                        request.title(),
-                        request.content(),
-                        category
-                );
+        assertThatCode(() -> announcementService.update(1L, request)).doesNotThrowAnyException();
+        then(announcement).should().update(request.title(), request.content(), category);
     }
-
-    // 공지 삭제
 
     @Test
     @DisplayName("공지사항 삭제 - 성공")
     void deleteAnnouncement_success() {
-
         Announcement announcement = mock(Announcement.class);
 
-        given(announcementRepository.findById(1L))
-                .willReturn(Optional.of(announcement));
+        given(announcementRepository.findById(1L)).willReturn(Optional.of(announcement));
 
-        assertThatCode(() ->
-                announcementService.delete(1L)
-        ).doesNotThrowAnyException();
-
-        then(announcementRepository)
-                .should()
-                .delete(announcement);
+        assertThatCode(() -> announcementService.delete(1L)).doesNotThrowAnyException();
+        then(announcementRepository).should().delete(announcement);
     }
 }

@@ -1,11 +1,12 @@
 package com.hyend.service;
 
+import com.hyend.common.ErrorCode;
 import com.hyend.dto.book.BookResponse;
-import com.hyend.dto.book.RentRequest;
 import com.hyend.dto.book.RentalResponse;
 import com.hyend.entity.Book;
 import com.hyend.entity.BookRental;
 import com.hyend.entity.User;
+import com.hyend.exception.BusinessException;
 import com.hyend.mapper.BookMapper;
 import com.hyend.repository.BookRentalRepository;
 import com.hyend.repository.BookRepository;
@@ -30,10 +31,8 @@ public class BookService {
     private final BookMapper bookMapper;
     private final UserRepository userRepository;
 
-
     @Cacheable(value = "books")
     public List<BookResponse> getAllBooks() {
-
         return bookRepository.findAll()
                 .stream()
                 .map(bookMapper::toResponse)
@@ -41,93 +40,43 @@ public class BookService {
     }
 
     public BookResponse getBook(Long id) {
-
-        Book book = bookRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("책을 찾을 수 없습니다."));
-
-        return bookMapper.toResponse(book);
+        return bookMapper.toResponse(findBook(id));
     }
 
-    /*책 대출*/
     @Transactional
     @CacheEvict(value = "books", allEntries = true)
-    public RentalResponse rentBook(RentRequest request) {
-
-        Book book = bookRepository.findById(request.bookId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("책을 찾을 수 없습니다."));
+    public RentalResponse rentBook(Long bookId, Long userId) {
+        Book book = findBook(bookId);
 
         if (book.getAvailableCopies() <= 0) {
-            throw new IllegalArgumentException("대출 가능한 도서가 없습니다.");
+            throw new BusinessException(ErrorCode.BOOK_NOT_AVAILABLE);
         }
 
-        // 사용자 조회
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        boolean alreadyRented =
-                rentalRepository.existsByUserIdAndBookIdAndStatus(
-                        user.getId(),
-                        request.bookId(),
-                        BookRental.RentalStatus.ACTIVE
-                );
-
-        if (alreadyRented) {
-            throw new IllegalArgumentException("이미 대출한 도서입니다.");
+        if (rentalRepository.existsByUserIdAndBookIdAndStatus(userId, bookId, BookRental.RentalStatus.ACTIVE)) {
+            throw new BusinessException(ErrorCode.ALREADY_RENTED);
         }
 
-
-        //대출 생성
-        BookRental rental =
-                BookRental.of(
-                        book,
-                        user,
-                        LocalDateTime.now().plusDays(7)
-                );
-
-
-        // 재고 감소
+        BookRental rental = BookRental.of(book, user, LocalDateTime.now().plusDays(7));
         book.decreaseAvailable();
-        BookRental savedRental =
-                rentalRepository.save(rental);
-
-        return bookMapper.toResponse(savedRental);
+        return bookMapper.toResponse(rentalRepository.save(rental));
     }
 
-    // 책 반납
     @Transactional
     @CacheEvict(value = "books", allEntries = true)
     public void returnBook(Long rentalId) {
-
-        BookRental rental =
-                rentalRepository.findById(rentalId)
-                        .orElseThrow(() ->
-                                new IllegalArgumentException("대출 정보를 찾을 수 없습니다."));
-
-        // 이미 반납했는지 검사
-        if (rental.getStatus()==BookRental.RentalStatus.RETURNED) {
-            throw new IllegalStateException("이미 반납된 책입니다.");
+        BookRental rental = findRental(rentalId);
+        if (rental.getStatus() != BookRental.RentalStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.RENTAL_NOT_ACTIVE);
         }
-
         rental.returnBook();
-
-        // 재고 증가
-        Book book = rental.getBook();
-
-        book.increaseAvailable();
-
+        rental.getBook().increaseAvailable();
     }
 
     public boolean isOverdue(Long rentalId) {
-
-        BookRental rental =
-                rentalRepository.findById(rentalId)
-                        .orElseThrow(() ->
-                                new IllegalArgumentException("대출 정보를 찾을 수 없습니다."));
-
-        return LocalDate.now().isAfter(rental.getDueDate().toLocalDate());
+        return LocalDate.now().isAfter(findRental(rentalId).getDueDate().toLocalDate());
     }
 
     public List<RentalResponse> getMyRentals(Long userId) {
@@ -140,9 +89,9 @@ public class BookService {
     @Transactional
     public RentalResponse extendRental(Long rentalId, Long userId) {
         BookRental rental = rentalRepository.findByIdAndUserId(rentalId, userId)
-                .orElseThrow(() -> new com.hyend.exception.BusinessException(com.hyend.common.ErrorCode.RENTAL_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RENTAL_NOT_FOUND));
         if (!rental.canExtend()) {
-            throw new com.hyend.exception.BusinessException(com.hyend.common.ErrorCode.RENTAL_EXTEND_NOT_ALLOWED);
+            throw new BusinessException(ErrorCode.RENTAL_EXTEND_NOT_ALLOWED);
         }
         rental.extend();
         return bookMapper.toResponse(rental);
@@ -152,11 +101,21 @@ public class BookService {
     @CacheEvict(value = "books", allEntries = true)
     public void cancelRental(Long rentalId, Long userId) {
         BookRental rental = rentalRepository.findByIdAndUserId(rentalId, userId)
-                .orElseThrow(() -> new com.hyend.exception.BusinessException(com.hyend.common.ErrorCode.RENTAL_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RENTAL_NOT_FOUND));
         if (rental.getStatus() != BookRental.RentalStatus.ACTIVE) {
-            throw new com.hyend.exception.BusinessException(com.hyend.common.ErrorCode.RENTAL_NOT_FOUND);
+            throw new BusinessException(ErrorCode.RENTAL_NOT_ACTIVE);
         }
         rental.cancel();
         rental.getBook().increaseAvailable();
+    }
+
+    private Book findBook(Long id) {
+        return bookRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOOK_NOT_FOUND));
+    }
+
+    private BookRental findRental(Long id) {
+        return rentalRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RENTAL_NOT_FOUND));
     }
 }
