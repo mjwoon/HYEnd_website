@@ -6,6 +6,7 @@ import GreetingPage from '@/pages/about/GreetingPage';
 import VisionPage from '@/pages/about/VisionPage';
 import GalleryPage from '@/pages/about/GalleryPage';
 import NoticePage from '@/pages/board/NoticePage';
+import NoticeNewPage from '@/pages/board/NoticeNewPage';
 import ContestPage from '@/pages/board/ContestPage';
 import SubmissionPage from '@/pages/board/SubmissionPage';
 import FreeBoardPage from '@/pages/board/FreeBoardPage';
@@ -25,6 +26,7 @@ export function AppRouter() {
         <Route path="about/vision" element={<VisionPage />} />
         <Route path="about/gallery" element={<GalleryPage />} />
         <Route path="board/notice" element={<NoticePage />} />
+        <Route path="board/notice/new" element={<NoticeNewPage />} />
         <Route path="board/contest" element={<ContestPage />} />
         <Route path="board/submission" element={<SubmissionPage />} />
         <Route path="board/free" element={<FreeBoardPage />} />

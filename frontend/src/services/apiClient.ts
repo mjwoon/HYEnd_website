@@ -24,7 +24,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // TODO: Refresh token 로직 구현
       localStorage.removeItem('accessToken');
-      window.location.href = '/login';
+      //window.location.href = '/login';
     }
     return Promise.reject(error);
   },
