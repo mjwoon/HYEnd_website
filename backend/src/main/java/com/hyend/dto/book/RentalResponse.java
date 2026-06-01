@@ -2,15 +2,14 @@ package com.hyend.dto.book;
 
 import java.time.LocalDateTime;
 
-// TODO [H-1] 도서 대출 응답 DTO 구현
 public record RentalResponse(
+        Long rentalId,
         Long bookId,
         String title,
         String author,
         String category,
-
         boolean isAvailable,
-
+        boolean canExtend,
         LocalDateTime startDate,
         LocalDateTime endDate
 ) {

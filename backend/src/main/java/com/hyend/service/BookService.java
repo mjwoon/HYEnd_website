@@ -130,4 +130,34 @@ public class BookService {
 
         return LocalDate.now().isAfter(rental.getDueDate().toLocalDate());
     }
+
+    public List<RentalResponse> getMyRentals(Long userId) {
+        return rentalRepository.findByUserIdAndStatus(userId, BookRental.RentalStatus.ACTIVE)
+                .stream()
+                .map(bookMapper::toResponse)
+                .toList();
+    }
+
+    @Transactional
+    public RentalResponse extendRental(Long rentalId, Long userId) {
+        BookRental rental = rentalRepository.findByIdAndUserId(rentalId, userId)
+                .orElseThrow(() -> new com.hyend.exception.BusinessException(com.hyend.common.ErrorCode.RENTAL_NOT_FOUND));
+        if (!rental.canExtend()) {
+            throw new com.hyend.exception.BusinessException(com.hyend.common.ErrorCode.RENTAL_EXTEND_NOT_ALLOWED);
+        }
+        rental.extend();
+        return bookMapper.toResponse(rental);
+    }
+
+    @Transactional
+    @CacheEvict(value = "books", allEntries = true)
+    public void cancelRental(Long rentalId, Long userId) {
+        BookRental rental = rentalRepository.findByIdAndUserId(rentalId, userId)
+                .orElseThrow(() -> new com.hyend.exception.BusinessException(com.hyend.common.ErrorCode.RENTAL_NOT_FOUND));
+        if (rental.getStatus() != BookRental.RentalStatus.ACTIVE) {
+            throw new com.hyend.exception.BusinessException(com.hyend.common.ErrorCode.RENTAL_NOT_FOUND);
+        }
+        rental.cancel();
+        rental.getBook().increaseAvailable();
+    }
 }

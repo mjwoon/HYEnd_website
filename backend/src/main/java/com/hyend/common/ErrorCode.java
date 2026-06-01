@@ -29,6 +29,7 @@ public enum ErrorCode {
     BOOK_NOT_AVAILABLE(HttpStatus.CONFLICT, "대출 가능한 도서가 없습니다."),
     ALREADY_RENTED(HttpStatus.CONFLICT, "이미 대출 중인 도서입니다."),
     NOT_YOUR_RENTAL(HttpStatus.FORBIDDEN, "본인의 대출 내역이 아닙니다."),
+    RENTAL_EXTEND_NOT_ALLOWED(HttpStatus.CONFLICT, "이미 연장했거나 연장 불가능한 대출입니다."),
     INQUIRY_ALREADY_CLOSED(HttpStatus.CONFLICT, "이미 종료된 문의입니다."),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
     PRIVATE_INQUIRY(HttpStatus.FORBIDDEN, "비공개 문의입니다."),
