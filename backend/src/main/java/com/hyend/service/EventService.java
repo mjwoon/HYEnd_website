@@ -1,32 +1,32 @@
 package com.hyend.service;
 
+import com.hyend.common.ErrorCode;
 import com.hyend.dto.event.EventRequest;
 import com.hyend.dto.event.EventResponse;
 import com.hyend.entity.Event;
 import com.hyend.entity.User;
-import com.hyend.repository.CategoryRepository;
+import com.hyend.exception.BusinessException;
 import com.hyend.repository.EventRepository;
 import com.hyend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-// TODO [H-6] 행사 서비스 구현
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly=true)
+@Transactional(readOnly = true)
 public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
-    //이벤트 생성
     @Transactional
+    @CacheEvict(value = "events", allEntries = true)
     public EventResponse createEvent(Long userId, EventRequest request) {
-
         User author = findUserById(userId);
-
         Event event = Event.of(
                 request.title(),
                 request.description(),
@@ -35,13 +35,10 @@ public class EventService {
                 request.endTime(),
                 author
         );
-
-        Event saved = eventRepository.save(event);
-
-        return toResponse(saved);
+        return toResponse(eventRepository.save(event));
     }
 
-    //전체 조회
+    @Cacheable("events")
     public List<EventResponse> getAllEvents() {
         return eventRepository.findAll()
                 .stream()
@@ -49,18 +46,15 @@ public class EventService {
                 .toList();
     }
 
-    //단건 조회
+    @Cacheable(value = "events", key = "#id")
     public EventResponse getEvent(Long id) {
-        Event event = findEventById(id);
-        return toResponse(event);
+        return toResponse(findEventById(id));
     }
 
-    //수정
     @Transactional
+    @CacheEvict(value = "events", allEntries = true)
     public EventResponse updateEvent(Long id, EventRequest request) {
-
         Event event = findEventById(id);
-
         event.update(
                 request.title(),
                 request.description(),
@@ -68,36 +62,30 @@ public class EventService {
                 request.startTime(),
                 request.endTime()
         );
-
         return toResponse(event);
     }
-    // 삭제
+
     @Transactional
+    @CacheEvict(value = "events", allEntries = true)
     public void deleteEvent(Long id) {
-        Event event = findEventById(id);
-        eventRepository.delete(event);
+        eventRepository.delete(findEventById(id));
     }
 
-    //필요 메서드
     private Event findEventById(Long id) {
         return eventRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("이벤트를 찾을 수 없습니다.")
-                );
+                .orElseThrow(() -> new BusinessException(ErrorCode.EVENT_NOT_FOUND));
     }
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("사용자를 찾을 수 없습니다.")
-                );
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
     private EventResponse toResponse(Event event) {
         return new EventResponse(
                 event.getId(),
+                event.getTitle(),
                 event.getDescription(),
-                event.getLocation(),
                 event.getStartTime(),
                 event.getEndTime()
         );

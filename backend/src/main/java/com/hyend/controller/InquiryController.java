@@ -1,116 +1,111 @@
 package com.hyend.controller;
 
+import com.hyend.common.ApiResponse;
 import com.hyend.dto.inquiry.InquiryRequest;
 import com.hyend.dto.inquiry.InquiryResponse;
 import com.hyend.dto.inquiry.ReplyRequest;
 import com.hyend.dto.inquiry.ReplyResponse;
+import com.hyend.security.UserPrincipal;
 import com.hyend.service.InquiryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// TODO [H-8] 문의 컨트롤러 구현
+@Tag(name = "Inquiries", description = "문의 API")
 @RestController
 @RequestMapping("/api/inquiries")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class InquiryController {
 
     private final InquiryService inquiryService;
 
-    // 문의 단건 조회
+    @Operation(summary = "문의 단건 조회")
     @GetMapping("/{inquiryId}")
-    public ResponseEntity<InquiryResponse> getInquiry(
+    public ApiResponse<InquiryResponse> getInquiry(
             @PathVariable Long inquiryId,
-            @RequestParam Long requesterId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return ResponseEntity.ok(
-                inquiryService.getInquiry(inquiryId, requesterId)
-        );
+        return ApiResponse.ok(inquiryService.getInquiry(inquiryId, principal.getId()));
     }
 
-    // 내 문의 목록 조회
+    @Operation(summary = "내 문의 목록 조회")
     @GetMapping("/me")
-    public ResponseEntity<List<InquiryResponse>> getMyInquiries(
-            @RequestParam Long userId,
+    public ApiResponse<List<InquiryResponse>> getMyInquiries(
+            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-
-        return ResponseEntity.ok(
-                inquiryService.getMyInquiries(userId, pageable)
-        );
+        return ApiResponse.ok(inquiryService.getMyInquiries(principal.getId(), pageable));
     }
 
-    // 문의 생성
+    @Operation(summary = "문의 생성")
     @PostMapping
-    public ResponseEntity<InquiryResponse> createInquiry(
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<InquiryResponse> createInquiry(
             @RequestBody @Valid InquiryRequest request,
-            @RequestParam Long authorId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return ResponseEntity.ok(
-                inquiryService.createInquiry(request, authorId)
-        );
+        return ApiResponse.ok(inquiryService.createInquiry(request, principal.getId()));
     }
 
-    // 문의 수정
+    @Operation(summary = "문의 수정")
     @PutMapping("/{inquiryId}")
-    public ResponseEntity<InquiryResponse> updateInquiry(
+    public ApiResponse<InquiryResponse> updateInquiry(
             @PathVariable Long inquiryId,
             @RequestBody @Valid InquiryRequest request,
-            @RequestParam Long requesterId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return ResponseEntity.ok(
-                inquiryService.updateInquiry(inquiryId, request, requesterId)
-        );
+        return ApiResponse.ok(inquiryService.updateInquiry(inquiryId, request, principal.getId()));
     }
 
-    // 문의 삭제
+    @Operation(summary = "문의 삭제")
     @DeleteMapping("/{inquiryId}")
-    public ResponseEntity<Void> deleteInquiry(
+    public ApiResponse<Void> deleteInquiry(
             @PathVariable Long inquiryId,
-            @RequestParam Long requesterId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        inquiryService.deleteInquiry(inquiryId, requesterId);
-
-        return ResponseEntity.noContent().build();
+        inquiryService.deleteInquiry(inquiryId, principal.getId());
+        return ApiResponse.ok("문의가 삭제되었습니다.");
     }
 
-    // 문의 종료
+    @Operation(summary = "문의 종료")
     @PatchMapping("/{inquiryId}/close")
-    public ResponseEntity<Void> closeInquiry(
-            @PathVariable Long inquiryId
-    ) {
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    public ApiResponse<Void> closeInquiry(@PathVariable Long inquiryId) {
         inquiryService.closeInquiry(inquiryId);
-
-        return ResponseEntity.ok().build();
+        return ApiResponse.ok("문의가 종료되었습니다.");
     }
 
-    // 답변 목록 조회
+    @Operation(summary = "답변 목록 조회")
     @GetMapping("/{inquiryId}/replies")
-    public ResponseEntity<List<ReplyResponse>> getReplies(
+    public ApiResponse<List<ReplyResponse>> getReplies(
             @PathVariable Long inquiryId,
-            @RequestParam Long requesterId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return ResponseEntity.ok(
-                inquiryService.getReplies(inquiryId, requesterId)
-        );
+        return ApiResponse.ok(inquiryService.getReplies(inquiryId, principal.getId()));
     }
 
-    // 답변 생성
+    @Operation(summary = "답변 생성")
     @PostMapping("/{inquiryId}/replies")
-    public ResponseEntity<ReplyResponse> createReply(
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    public ApiResponse<ReplyResponse> createReply(
             @PathVariable Long inquiryId,
             @RequestBody @Valid ReplyRequest request,
-            @RequestParam Long authorId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return ResponseEntity.ok(
-                inquiryService.createReply(inquiryId, request, authorId)
-        );
+        return ApiResponse.ok(inquiryService.createReply(inquiryId, request, principal.getId()));
     }
 }

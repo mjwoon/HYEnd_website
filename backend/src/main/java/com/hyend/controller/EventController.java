@@ -1,56 +1,66 @@
 package com.hyend.controller;
 
+import com.hyend.common.ApiResponse;
 import com.hyend.dto.event.EventRequest;
 import com.hyend.dto.event.EventResponse;
+import com.hyend.security.UserPrincipal;
 import com.hyend.service.EventService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// TODO [H-6] 행사 컨트롤러 구현
+@Tag(name = "Events", description = "행사 API")
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
 public class EventController {
     private final EventService eventService;
 
-    // 이벤트 생성
+    @Operation(summary = "행사 생성")
     @PostMapping
-    public ResponseEntity<EventResponse> createEvent(
-            @RequestParam Long userId,
-            @RequestBody EventRequest request
+    @ResponseStatus(HttpStatus.CREATED)
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<EventResponse> createEvent(
+            @Valid @RequestBody EventRequest request,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return ResponseEntity.ok(eventService.createEvent(userId, request));
+        return ApiResponse.ok(eventService.createEvent(principal.getId(), request));
     }
 
-    // 전체 조회
+    @Operation(summary = "행사 목록 조회")
     @GetMapping
-    public ResponseEntity<List<EventResponse>> getAllEvents() {
-        return ResponseEntity.ok(eventService.getAllEvents());
+    public ApiResponse<List<EventResponse>> getAllEvents() {
+        return ApiResponse.ok(eventService.getAllEvents());
     }
 
-    // 단건 조회
+    @Operation(summary = "행사 단건 조회")
     @GetMapping("/{id}")
-    public ResponseEntity<EventResponse> getEvent(@PathVariable Long id) {
-        return ResponseEntity.ok(eventService.getEvent(id));
+    public ApiResponse<EventResponse> getEvent(@PathVariable Long id) {
+        return ApiResponse.ok(eventService.getEvent(id));
     }
 
-    // 수정
+    @Operation(summary = "행사 수정")
     @PutMapping("/{id}")
-    public ResponseEntity<EventResponse> updateEvent(
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<EventResponse> updateEvent(
             @PathVariable Long id,
-            @RequestBody EventRequest request
+            @Valid @RequestBody EventRequest request
     ) {
-        return ResponseEntity.ok(eventService.updateEvent(id, request));
+        return ApiResponse.ok(eventService.updateEvent(id, request));
     }
 
-    // 삭제
+    @Operation(summary = "행사 삭제")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<Void> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.ok("행사가 삭제되었습니다.");
     }
-
 }
