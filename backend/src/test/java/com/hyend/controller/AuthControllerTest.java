@@ -34,13 +34,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthControllerTest {
 
     @Mock AuthService authService;
+    @Mock com.hyend.service.UserService userService;
 
     MockMvc mockMvc;
     final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        AuthController controller = new AuthController(authService);
+        AuthController controller = new AuthController(authService, userService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())

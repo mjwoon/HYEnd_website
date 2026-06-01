@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -28,6 +29,7 @@ class AnnouncementServiceTest {
     @Mock AnnouncementRepository announcementRepository;
     @Mock UserRepository userRepository;
     @Mock CategoryRepository categoryRepository;
+    @Mock AttachmentService attachmentService;
     @InjectMocks AnnouncementService announcementService;
 
     @Test
@@ -40,6 +42,7 @@ class AnnouncementServiceTest {
         given(userRepository.findById(1L)).willReturn(Optional.of(author));
         given(categoryRepository.findByName("GENERAL")).willReturn(Optional.of(category));
         given(announcementRepository.save(any(Announcement.class))).willAnswer(i -> i.getArgument(0));
+        given(attachmentService.findByEntity(any(), any())).willReturn(List.of());
 
         assertThatCode(() -> announcementService.create(request, 1L)).doesNotThrowAnyException();
         then(announcementRepository).should().save(any(Announcement.class));
@@ -68,6 +71,7 @@ class AnnouncementServiceTest {
         given(announcement.getAuthor()).willReturn(author);
         given(category.getName()).willReturn("GENERAL");
         given(author.getName()).willReturn("관리자");
+        given(attachmentService.findByEntity(any(), any())).willReturn(List.of());
 
         assertThatCode(() -> announcementService.getDetail(1L)).doesNotThrowAnyException();
         then(announcementRepository).should().findById(1L);
@@ -96,6 +100,7 @@ class AnnouncementServiceTest {
         given(announcement.getAuthor()).willReturn(author);
         given(category.getName()).willReturn("EVENT");
         given(author.getName()).willReturn("관리자");
+        given(attachmentService.findByEntity(any(), any())).willReturn(List.of());
 
         assertThatCode(() -> announcementService.update(1L, request)).doesNotThrowAnyException();
         then(announcement).should().update(request.title(), request.content(), category);

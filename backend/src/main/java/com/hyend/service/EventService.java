@@ -86,6 +86,7 @@ public class EventService {
                 event.getId(),
                 event.getTitle(),
                 event.getDescription(),
+                event.getLocation(),
                 event.getStartTime(),
                 event.getEndTime()
         );

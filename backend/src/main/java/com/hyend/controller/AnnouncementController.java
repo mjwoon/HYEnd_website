@@ -5,8 +5,11 @@ import com.hyend.common.PageResponse;
 import com.hyend.dto.announcement.AnnouncementRequest;
 import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.dto.announcement.AnnouncementSummary;
+import com.hyend.dto.file.AttachmentResponse;
+import com.hyend.entity.Attachment;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.AnnouncementService;
+import com.hyend.service.AttachmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +31,7 @@ import java.util.List;
 public class AnnouncementController {
 
     private final AnnouncementService announcementService;
+    private final AttachmentService attachmentService;
 
     @Operation(summary = "공지사항 목록 조회")
     @GetMapping
@@ -100,5 +104,11 @@ public class AnnouncementController {
     public ApiResponse<Void> unpin(@PathVariable Long id) {
         announcementService.unpin(id);
         return ApiResponse.ok("공지사항 고정이 해제되었습니다.");
+    }
+
+    @Operation(summary = "공지사항 첨부파일 목록")
+    @GetMapping("/{id}/attachments")
+    public ApiResponse<List<AttachmentResponse>> getAttachments(@PathVariable Long id) {
+        return ApiResponse.ok(attachmentService.findByEntity(Attachment.EntityType.ANNOUNCEMENT, id));
     }
 }

@@ -18,6 +18,12 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    public UserResponse getMe(Long userId) {
+        return userRepository.findById(userId)
+                .map(UserResponse::from)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
     public Page<UserResponse> getUsers(User.Role role, String keyword, Pageable pageable) {
         return userRepository.findAllWithFilter(role, keyword, pageable)
                 .map(UserResponse::from);

@@ -6,6 +6,7 @@ import com.hyend.dto.announcement.AnnouncementRequest;
 import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.dto.announcement.AnnouncementSummary;
 import com.hyend.entity.Announcement;
+import com.hyend.entity.Attachment;
 import com.hyend.entity.Category;
 import com.hyend.entity.User;
 import com.hyend.exception.BusinessException;
@@ -30,6 +31,7 @@ public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final AttachmentService attachmentService;
 
     @Cacheable(value = "announcements", key = "'list:' + #pageable.pageNumber + ':' + #pageable.pageSize")
     public Page<AnnouncementSummary> getList(Pageable pageable) {
@@ -134,7 +136,8 @@ public class AnnouncementService {
                 a.isPinned(),
                 viewCount,
                 a.getCreatedAt(),
-                a.getUpdatedAt()
+                a.getUpdatedAt(),
+                attachmentService.findByEntity(Attachment.EntityType.ANNOUNCEMENT, a.getId())
         );
     }
 }
