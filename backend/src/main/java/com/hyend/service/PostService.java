@@ -23,6 +23,11 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
+    public Page<PostSummary> getMyPosts(Long authorId, Post.BoardType boardType, Pageable pageable) {
+        return postRepository.findByAuthorIdWithFilter(authorId, boardType, pageable)
+                .map(PostSummary::from);
+    }
+
     public Page<PostSummary> getList(Post.BoardType boardType, String keyword, Pageable pageable) {
         return postRepository.findByBoardTypeWithKeyword(boardType, keyword, pageable)
                 .map(PostSummary::from);

@@ -29,6 +29,17 @@ public class PostController {
 
     private final PostService postService;
 
+    @Operation(summary = "내 게시글 목록", description = "boardType 생략 시 전체 조회. SUBMISSION만 조회하면 MyAssignmentsPage 용도.")
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/my")
+    public ApiResponse<PageResponse<PostSummary>> getMyPosts(
+            @Parameter(description = "게시판 필터 (생략 가능)") @RequestParam(required = false) Post.BoardType boardType,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        return ApiResponse.ok(PageResponse.of(postService.getMyPosts(principal.getId(), boardType, pageable)));
+    }
+
     @Operation(summary = "게시글 목록 조회", description = "boardType: CONTEST(공모전) / SUBMISSION(제출) / FREE(자유게시판)")
     @GetMapping
     public ApiResponse<PageResponse<PostSummary>> getList(

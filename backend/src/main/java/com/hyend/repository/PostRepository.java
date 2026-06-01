@@ -16,4 +16,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
     void incrementViewCount(@Param("id") Long id);
+
+    @Query("SELECT p FROM Post p WHERE p.author.id = :authorId AND (:boardType IS NULL OR p.boardType = :boardType)")
+    Page<Post> findByAuthorIdWithFilter(@Param("authorId") Long authorId, @Param("boardType") Post.BoardType boardType, Pageable pageable);
 }
