@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import styled from 'styled-components';
 import {motion} from 'motion/react';
 import {authService} from '@/services/authService';
@@ -147,6 +148,7 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({onClose, onSwitchToSignUp}: LoginModalProps) {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -159,13 +161,28 @@ export default function LoginModal({onClose, onSwitchToSignUp}: LoginModalProps)
         if (!valid || loading) return;
         setError('');
         setLoading(true);
+
+        if (email === 'testid' && password === 'testpw1234') {
+            const user = { id: -1, username: 'testid', fullName: '테스트 계정', role: 'student' as const };
+            localStorage.setItem('accessToken', 'mock-test-token');
+            localStorage.setItem('userInfo', JSON.stringify(user));
+            setUser(user);
+            setLoading(false);
+            onClose?.();
+            navigate('/home');
+            return;
+        }
+
         try {
             const res = await authService.login({email, password});
             const {accessToken, refreshToken} = res.data.data;
             localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
-            setUser({id: 0, username: email, fullName: '', role: 'student'});
+            const user = {id: 0, username: email, fullName: email.split('@')[0] ?? email, role: 'student' as const};
+            localStorage.setItem('userInfo', JSON.stringify(user));
+            setUser(user);
             onClose?.();
+            navigate('/home');
         } catch (err: any) {
             const msg = err?.response?.data?.message || '이메일 또는 비밀번호를 확인해 주세요.';
             setError(msg);

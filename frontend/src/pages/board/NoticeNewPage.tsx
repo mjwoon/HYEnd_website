@@ -56,6 +56,7 @@ export default function NoticeNewPage() {
                 title: title.trim(),
                 content: content.trim(),
                 category: '공지사항',
+                writer: '관리자',
             });
 
             navigate('/board/notice');

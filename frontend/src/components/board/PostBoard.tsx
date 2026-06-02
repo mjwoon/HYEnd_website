@@ -2,42 +2,49 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import BoardLayout from '@/components/board/BoardLayout';
-import { announcementService, AnnouncementSummary } from '@/services/announcementService';
+import { postService, PostSummary, BoardType } from '@/services/postService';
 import { useAuthStore } from '@/store/authStore';
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
-export default function NoticePage() {
+const BOARD_PATH: Record<BoardType, string> = {
+  CONTEST: 'contest',
+  SUBMISSION: 'submission',
+  FREE: 'free',
+};
+
+interface PostBoardProps {
+  boardType: BoardType;
+  adminOnly?: boolean;
+}
+
+export default function PostBoard({ boardType, adminOnly = false }: PostBoardProps) {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.role === 'admin';
+  const canWrite = adminOnly ? isAdmin : !!user;
+  const basePath = `/board/${BOARD_PATH[boardType]}`;
 
-  const [list, setList] = useState<AnnouncementSummary[]>([]);
-  const [pinned, setPinned] = useState<AnnouncementSummary[]>([]);
+  const [list, setList] = useState<PostSummary[]>([]);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const reloadPinned = () =>
-    announcementService.getPinned().then(res => setPinned(res)).catch(() => {});
-
   const reload = () => {
     setLoading(true);
-    announcementService.getList({ page, size: pageSize })
+    postService.getList({ boardType, page, size: pageSize })
       .then(res => { setList(res.content); setTotalPages(Math.max(1, res.totalPages)); })
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { reloadPinned(); }, []);
   useEffect(() => { reload(); }, [page, pageSize]);
 
   const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm('삭제하시겠습니까?')) return;
-    await announcementService.remove(id);
-    reloadPinned();
+    await postService.remove(id);
     setPage(0);
     reload();
   };
@@ -50,40 +57,24 @@ export default function NoticePage() {
     <BoardLayout>
       <TableHeader>
         <ColTitle>제목</ColTitle>
+        <ColAuthor>작성자</ColAuthor>
         <ColDate>작성일</ColDate>
         <ColView>조회</ColView>
         {isAdmin && <ColAction />}
       </TableHeader>
 
       <TableBody>
-        {pinned.map(item => (
-          <Row key={`pin-${item.id}`} $pinned onClick={() => navigate(`/board/notice/${item.id}`)}>
-            <ColTitle>
-              <PinMark>📌</PinMark>
-              <TitleText $pinned>{item.title}</TitleText>
-            </ColTitle>
-            <ColDate>{formatDate(item.createdAt)}</ColDate>
-            <ColView>-</ColView>
-            {isAdmin && (
-              <ColAction>
-                <DeleteBtn onClick={(e) => handleDelete(item.id, e)}>삭제</DeleteBtn>
-              </ColAction>
-            )}
-          </Row>
-        ))}
-
         {loading ? (
           <EmptyRow>불러오는 중...</EmptyRow>
         ) : list.length === 0 ? (
-          <EmptyRow>공지사항이 없습니다.</EmptyRow>
+          <EmptyRow>게시글이 없습니다.</EmptyRow>
         ) : (
           list.map(item => (
-            <Row key={item.id} onClick={() => navigate(`/board/notice/${item.id}`)}>
-              <ColTitle>
-                <TitleText>{item.title}</TitleText>
-              </ColTitle>
+            <Row key={item.id} onClick={() => navigate(`${basePath}/${item.id}`)}>
+              <ColTitle><TitleText>{item.title}</TitleText></ColTitle>
+              <ColAuthor>{item.authorName}</ColAuthor>
               <ColDate>{formatDate(item.createdAt)}</ColDate>
-              <ColView>-</ColView>
+              <ColView>{item.viewCount}</ColView>
               {isAdmin && (
                 <ColAction>
                   <DeleteBtn onClick={(e) => handleDelete(item.id, e)}>삭제</DeleteBtn>
@@ -110,8 +101,8 @@ export default function NoticePage() {
           <PageBtn onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}>›</PageBtn>
         </Pagination>
 
-        {isAdmin && (
-          <NewPostButton onClick={() => navigate('/board/notice/new')}>새글작성 +</NewPostButton>
+        {canWrite && (
+          <NewPostButton onClick={() => navigate(`${basePath}/new`)}>새글작성 +</NewPostButton>
         )}
       </Footer>
     </BoardLayout>
@@ -128,15 +119,19 @@ const TableHeader = styled.div`
 
 const TableBody = styled.div``;
 
-const Row = styled.div<{ $pinned?: boolean }>`
+const Row = styled.div`
     display: flex; align-items: center; padding: 14px 20px;
     border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer;
-    background: ${({ $pinned }) => $pinned ? 'rgba(95,251,122,0.03)' : 'transparent'};
     transition: background 0.15s;
     &:hover { background: rgba(255,255,255,0.04); }
 `;
 
 const ColTitle = styled.div`flex: 1; display: flex; align-items: center; gap: 8px; overflow: hidden;`;
+const ColAuthor = styled.div`
+    width: 80px; text-align: center; font-size: 0.8125rem;
+    color: ${({ theme }) => theme.colors.text.secondary}; flex-shrink: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+`;
 const ColDate = styled.div`
     width: 100px; text-align: center; font-size: 0.8125rem;
     color: ${({ theme }) => theme.colors.text.secondary}; flex-shrink: 0;
@@ -154,14 +149,11 @@ const DeleteBtn = styled.button`
     &:hover { background: rgba(255,80,80,0.15); }
 `;
 
-const TitleText = styled.span<{ $pinned?: boolean }>`
-    font-size: 0.9375rem;
-    color: ${({ $pinned, theme }) => $pinned ? theme.colors.neonGreen : theme.colors.text.primary};
+const TitleText = styled.span`
+    font-size: 0.9375rem; color: ${({ theme }) => theme.colors.text.primary};
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     ${Row}:hover & { color: ${({ theme }) => theme.colors.neonGreen}; }
 `;
-
-const PinMark = styled.span`font-size: 0.75rem; flex-shrink: 0;`;
 
 const EmptyRow = styled.div`
     padding: 48px; text-align: center;
