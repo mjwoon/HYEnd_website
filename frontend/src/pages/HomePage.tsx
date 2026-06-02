@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { postService, type PostSummary, type BoardType } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
 import HomeCalendar from '../components/HomeCalendar';
+import LogoutConfirmModal from '../components/modals/LogoutConfirmModal';
 
 const Wrapper = styled.div`
   color: white;
@@ -359,6 +360,7 @@ export default function HomePage() {
     FREE: [],
   });
   const [loadingBoards, setLoadingBoards] = useState(true);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     Promise.all(
@@ -399,7 +401,7 @@ export default function HomePage() {
             <Email>{user?.username ?? '-'}</Email>
             <ButtonRow>
               <Button onClick={() => navigate('/my/profile')}>내 정보</Button>
-              <Button onClick={logout}>로그아웃</Button>
+              <Button onClick={() => setLogoutModalOpen(true)}>로그아웃</Button>
             </ButtonRow>
           </ProfileCard>
           <Bookitem onClick={() => navigate('/books')}>
@@ -440,6 +442,12 @@ export default function HomePage() {
           <HomeCalendar />
         </CenterRight>
       </MainContent>
+      {logoutModalOpen && (
+        <LogoutConfirmModal
+          onClose={() => setLogoutModalOpen(false)}
+          onConfirm={logout}
+        />
+      )}
     </Wrapper>
   );
 }
