@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { postService, type PostSummary, type BoardType } from '../services/postService';
+import { announcementService, type AnnouncementSummary } from '../services/announcementService';
 import { useAuthStore } from '../store/authStore';
 import HomeCalendar from '../components/HomeCalendar';
 import LogoutConfirmModal from '../components/modals/LogoutConfirmModal';
@@ -29,6 +30,11 @@ const NoticeBar = styled.div`
   }
 `;
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
 const NoticeLabel = styled.span`
   color: #FFF;
   text-align: center;
@@ -37,9 +43,30 @@ const NoticeLabel = styled.span`
   font-weight: 700;
   letter-spacing: -0.56px;
   white-space: nowrap;
+  flex-shrink: 0;
+`;
+
+const NoticeDot = styled.span`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #5FFB7A;
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+`;
+
+const NoticeTextWrap = styled.div`
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
 `;
 
 const NoticeText = styled.span`
+  display: block;
   color: #FFF;
   font-family: "Pretendard Variable";
   font-size: 13px;
@@ -47,13 +74,30 @@ const NoticeText = styled.span`
   letter-spacing: -0.52px;
   text-decoration-line: underline;
   cursor: pointer;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  animation: ${fadeIn} 0.35s ease;
+
+  &:hover { color: #5FFB7A; }
 
   @media (max-width: 639px) {
     font-size: 12px;
   }
+`;
+
+const NoticeEmpty = styled.span`
+  color: #555;
+  font-family: "Pretendard Variable";
+  font-size: 13px;
+`;
+
+const NoticePager = styled.span`
+  color: #555;
+  font-family: "Pretendard Variable";
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
 `;
 
 /* ── 전체 레이아웃 ─────────────────────────────
@@ -361,6 +405,25 @@ export default function HomePage() {
   });
   const [loadingBoards, setLoadingBoards] = useState(true);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [pinnedNotices, setPinnedNotices] = useState<AnnouncementSummary[]>([]);
+  const [noticeIdx, setNoticeIdx] = useState(0);
+
+  // 핀된 공지 로드
+  useEffect(() => {
+    announcementService.getPinned().then((list) => {
+      setPinnedNotices(list);
+      setNoticeIdx(0);
+    });
+  }, []);
+
+  // 여러 공지 자동 슬라이드 (4초 간격)
+  useEffect(() => {
+    if (pinnedNotices.length <= 1) return;
+    const timer = setInterval(() => {
+      setNoticeIdx((i) => (i + 1) % pinnedNotices.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [pinnedNotices]);
 
   useEffect(() => {
     Promise.all(
@@ -380,7 +443,22 @@ export default function HomePage() {
     <Wrapper>
       <NoticeBar>
         <NoticeLabel>공지사항</NoticeLabel>
-        <NoticeText>📢 재학생 프로젝트 2차 과제 마감일 공지</NoticeText>
+        <NoticeDot />
+        <NoticeTextWrap>
+          {pinnedNotices.length === 0 ? (
+            <NoticeEmpty>등록된 공지사항이 없습니다</NoticeEmpty>
+          ) : (
+            <NoticeText
+              key={noticeIdx}
+              onClick={() => navigate(`/board/notice/${pinnedNotices[noticeIdx]?.id}`)}
+            >
+              📌 {pinnedNotices[noticeIdx]?.title}
+            </NoticeText>
+          )}
+        </NoticeTextWrap>
+        {pinnedNotices.length > 1 && (
+          <NoticePager>{noticeIdx + 1} / {pinnedNotices.length}</NoticePager>
+        )}
       </NoticeBar>
 
       <MainContent>
