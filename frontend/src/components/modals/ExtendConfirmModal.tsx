@@ -1,15 +1,11 @@
 import styled from 'styled-components';
 import bookIcon from '../../assets/📚.png';
-
-interface LoanBook {
-    title: string;
-    period: string;
-    canExtend: boolean;
-}
+import { type BookLoan } from '../../store/bookStore';
 
 interface Props {
-    loan: LoanBook | null;
+    loan: BookLoan | null;
     onClose: () => void;
+    onConfirm: () => void;
 }
 
 const Overlay = styled.div`
@@ -50,29 +46,16 @@ const IconWrapper = styled.div`
 const Title = styled.h2`
   font-family: "Pretendard Variable";
   font-size: 18px;
-  font-style: normal;
   font-weight: 600;
-  line-height: normal;
   margin: 0;
   text-align: center;
 `;
 
-const ContentsWrapper=styled.p`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-`;
-
-const BookTitle = styled.p`
-  font-family: "Pretendard Variable";
-  width: 143px;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: normal;
-  color: #fff;
-  text-align: center;
+const ContentsWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 `;
 
 const Description = styled.p`
@@ -80,9 +63,17 @@ const Description = styled.p`
   font-family: "Pretendard Variable";
   font-size: 12px;
   text-align: center;
-  font-style: normal;
   font-weight: 600;
-  line-height: normal;
+  margin: 0;
+`;
+
+const ExtendInfo = styled.p`
+  font-family: "Pretendard Variable";
+  font-size: 11px;
+  color: #5FA5F9;
+  text-align: center;
+  font-weight: 600;
+  margin: 0;
 `;
 
 const ExtendCount = styled.p`
@@ -90,9 +81,8 @@ const ExtendCount = styled.p`
   font-size: 10px;
   color: #999;
   text-align: center;
-  font-style: normal;
   font-weight: 600;
-  line-height: normal;
+  margin: 0;
 `;
 
 const ButtonRow = styled.div`
@@ -105,21 +95,15 @@ const CancelButton = styled.button`
   display: flex;
   width: 121px;
   height: 39px;
-  padding: 15px 20px;
   border-radius: 8px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
   border: 1px solid #5D625E;
   background: rgba(255,255,255,0.10);
-   color: #fff;
+  color: #fff;
   font-family: "Pretendard Variable";
   font-size: 14px;
   font-weight: 500;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: normal;
   letter-spacing: -0.56px;
 `;
 
@@ -127,40 +111,43 @@ const ConfirmButton = styled.button`
   display: flex;
   width: 121px;
   height: 39px;
-  padding: 15px 20px;
   border-radius: 8px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  border: 1px solid #5D625E;
   background: #2A6AEE;
   color: #fff;
   font-family: "Pretendard Variable";
   font-size: 14px;
   font-weight: 700;
-  font-style: normal;
-  line-height: normal;
   letter-spacing: -0.56px;
 `;
 
-export function ExtendConfirmModal({ loan, onClose }: Props) {
+function addDays(dateStr: string, days: number): string {
+    const d = new Date(dateStr);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+}
+
+export function ExtendConfirmModal({ loan, onClose, onConfirm }: Props) {
     if (!loan) return null;
 
+    const newEndDate = addDays(loan.endDate, 14);
+
     return (
-        <Overlay>
+        <Overlay onClick={(e) => e.stopPropagation()}>
             <Card>
                 <IconWrapper>
                     <img src={bookIcon} width={48} height={48} />
                 </IconWrapper>
                 <Title>대여 연장 확인</Title>
                 <ContentsWrapper>
-                    <BookTitle>"{loan.title}"</BookTitle>
                     <Description>도서의 대여 기간을 2주 연장하시겠습니까?</Description>
+                    <ExtendInfo>{loan.endDate} → {newEndDate}</ExtendInfo>
                     <ExtendCount>(연장 횟수: 0/1)</ExtendCount>
                 </ContentsWrapper>
                 <ButtonRow>
                     <CancelButton onClick={onClose}>취소</CancelButton>
-                    <ConfirmButton>연장하기</ConfirmButton>
+                    <ConfirmButton onClick={onConfirm}>연장하기</ConfirmButton>
                 </ButtonRow>
             </Card>
         </Overlay>

@@ -1,14 +1,10 @@
 import styled from 'styled-components';
-
-interface LoanBook {
-    title: string;
-    period: string;
-    canExtend: boolean;
-}
+import { type BookLoan } from '../../store/bookStore';
 
 interface Props {
-    loan: LoanBook | null;
+    loan: BookLoan | null;
     onClose: () => void;
+    onConfirm: () => void;
 }
 
 const Overlay = styled.div`
@@ -34,7 +30,7 @@ const Card = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  `;
+`;
 
 const IconWrapper = styled.div`
   width: 80px;
@@ -44,34 +40,31 @@ const IconWrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  `;
+`;
 
 const Title = styled.h2`
   font-family: "Pretendard Variable";
   font-size: 18px;
-  font-style: normal;
   font-weight: 600;
-  line-height: normal;
   margin: 0;
   text-align: center;
-  `;
+`;
 
-const ContentsWrapper=styled.p`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
+const ContentsWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 `;
 
 const BookTitle = styled.p`
   font-family: "Pretendard Variable";
-  width: 143px;
+  width: 200px;
   font-size: 12px;
-  font-style: normal;
   font-weight: 600;
-  line-height: normal;
   color: #fff;
   text-align: center;
+  margin: 0;
 `;
 
 const Description = styled.p`
@@ -79,20 +72,18 @@ const Description = styled.p`
   font-family: "Pretendard Variable";
   font-size: 12px;
   text-align: center;
-  font-style: normal;
   font-weight: 600;
-  line-height: normal;
+  margin: 0;
 `;
 
 const Warning = styled.p`
-    font-family: "Pretendard Variable";
-    font-size: 10px;
-    color: #F87171;
-    text-align: center;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
-    `;
+  font-family: "Pretendard Variable";
+  font-size: 10px;
+  color: #F87171;
+  text-align: center;
+  font-weight: 600;
+  margin: 0;
+`;
 
 const ButtonRow = styled.div`
   display: flex;
@@ -104,21 +95,15 @@ const CancelButton = styled.button`
   display: flex;
   width: 121px;
   height: 39px;
-  padding: 15px 20px;
   border-radius: 8px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
   border: 1px solid #5D625E;
   background: rgba(255,255,255,0.10);
   color: #fff;
   font-family: "Pretendard Variable";
   font-size: 14px;
   font-weight: 500;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: normal;
   letter-spacing: -0.56px;
 `;
 
@@ -126,40 +111,35 @@ const ConfirmButton = styled.button`
   display: flex;
   width: 121px;
   height: 39px;
-  padding: 15px 20px;
   border-radius: 8px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  border: 1px solid #5D625E;
   background: #E12E2E;
   color: #fff;
   font-family: "Pretendard Variable";
   font-size: 14px;
   font-weight: 700;
-  font-style: normal;
-  line-height: normal;
   letter-spacing: -0.56px;
 `;
 
-export function CancelConfirmModal({ loan, onClose }: Props) {
+export function CancelConfirmModal({ loan, onClose, onConfirm }: Props) {
     if (!loan) return null;
 
     return (
-        <Overlay>
+        <Overlay onClick={(e) => e.stopPropagation()}>
             <Card>
                 <IconWrapper>
                     <span style={{ fontSize: '40px' }}>🗑️</span>
                 </IconWrapper>
                 <Title>대여 취소 확인</Title>
                 <ContentsWrapper>
-                    <BookTitle>"{loan.title}"</BookTitle>
+                    <BookTitle>"{loan.startDate} ~ {loan.endDate}"</BookTitle>
                     <Description>도서의 대여를 취소하시겠습니까?</Description>
                     <Warning>취소 후에는 다시 되돌릴 수 없습니다.</Warning>
                 </ContentsWrapper>
                 <ButtonRow>
                     <CancelButton onClick={onClose}>취소</CancelButton>
-                    <ConfirmButton>대여 취소</ConfirmButton>
+                    <ConfirmButton onClick={onConfirm}>대여 취소</ConfirmButton>
                 </ButtonRow>
             </Card>
         </Overlay>

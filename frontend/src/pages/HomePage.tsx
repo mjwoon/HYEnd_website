@@ -137,22 +137,22 @@ const Button = styled.button`
   }
 `;
 
-const MenuItem = styled.div`
-  display: flex;
-  width: 230px;
-  height: 38px;
-  padding: 15px 20px;
-  align-items: center;
-  gap: 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  transition: background 0.2s ease;
-  cursor: pointer;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.14);
-  }
-`;
+// const MenuItem = styled.div`
+//   display: flex;
+//   width: 230px;
+//   height: 38px;
+//   padding: 15px 20px;
+//   align-items: center;
+//   gap: 10px;
+//   border-radius: 8px;
+//   background: rgba(255, 255, 255, 0.04);
+//   transition: background 0.2s ease;
+//   cursor: pointer;
+//
+//   &:hover {
+//     background: rgba(255, 255, 255, 0.14);
+//   }
+// `;
 
 const Bookitem = styled.div`
   display: flex;
@@ -343,9 +343,9 @@ export default function HomePage() {
               <Button onClick={logout}>로그아웃</Button>
             </ButtonRow>
           </ProfileCard>
-          <MenuItem onClick={() => navigate('/my/posts')}>✍🏻 내가 쓴 글</MenuItem>
-          <MenuItem onClick={() => navigate('/my/assignments')}>📝 내 과제</MenuItem>
-          <MenuItem onClick={() => navigate('/my/scraps')}>⭐ 내 스크랩</MenuItem>
+          {/*<MenuItem onClick={() => navigate('/my/posts')}>✍🏻 내가 쓴 글</MenuItem>*/}
+          {/*<MenuItem onClick={() => navigate('/my/assignments')}>📝 내 과제</MenuItem>*/}
+          {/*<MenuItem onClick={() => navigate('/my/scraps')}>⭐ 내 스크랩</MenuItem>*/}
           <Bookitem onClick={() => navigate('/books')}>
             📚 도서 대여하러 가기
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="11" viewBox="0 0 13 11" fill="none">

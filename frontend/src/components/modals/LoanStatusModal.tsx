@@ -1,20 +1,9 @@
 import styled from 'styled-components';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ExtendConfirmModal } from './ExtendConfirmModal';
 import { CancelConfirmModal } from './CancelConfirmModal';
-
-interface LoanBook {
-    title: string;
-    period: string;
-    canExtend: boolean;
-}
-
-const loans: LoanBook[] = [
-    { title: 'Android Studio를 활용한 안드로이드 프로그래밍 (9판)', period: '2024-07-01 ~ 2024-07-15', canExtend: true },
-    { title: 'Android Studio를 활용한 안드로이드 프로그래밍 (9판)', period: '2024-07-01 ~ 2024-07-15', canExtend: true },
-    { title: 'Android Studio를 활용한 안드로이드 프로그래밍 (9판)', period: '2024-07-01 ~ 2024-07-15', canExtend: false },
-    { title: 'Android Studio를 활용한 안드로이드 프로그래밍 (9판)', period: '2024-07-01 ~ 2024-07-15', canExtend: true },
-];
+import { bookLoanStore, type BookLoan } from '../../store/bookStore';
+import { useAuthStore } from '../../store/authStore';
 
 const Overlay = styled.div`
   position: fixed;
@@ -35,13 +24,11 @@ const Card = styled.div`
   border: 1px solid #40423F;
   background: #181818;
   color: #fff;
-  z-index: 101;  
-  position: relative;  
+  z-index: 101;
+  position: relative;
 `;
 
 const CardTitle = styled.h2`
-  width: 134px;
-  height: 26px;
   color: #FFF;
   font-family: "Pretendard Variable";
   font-size: 18px;
@@ -64,7 +51,6 @@ const TableHeader = styled.div`
   border-radius: 14px;
   border: 1px solid #40423F;
   background: #2C3C2F;
-  color: #5FFB7A;
   font-family: "Pretendard Variable";
   font-size: 14px;
   font-weight: 600;
@@ -74,7 +60,6 @@ const HeaderCell = styled.span`
   color: #5FFB7A;
   font-family: "Pretendard Variable";
   font-size: 14px;
-  font-style: normal;
   font-weight: 400;
   line-height: normal;
 `;
@@ -85,14 +70,12 @@ const TableRow = styled.div`
   grid-template-columns: 2fr 2fr 1fr 1fr;
   padding: 10px 20px;
   gap: 54.33px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.02);
   border-radius: 14px;
   border: 1px solid #40423F;
   font-size: 12px;
-    justify-content: space-between;
-    align-items: center;
-    align-self: stretch;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.02);
 `;
 
 const BookTitle = styled.span`
@@ -101,6 +84,9 @@ const BookTitle = styled.span`
   font-family: "Pretendard Variable";
   font-size: 12px;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const Period = styled.span`
@@ -116,10 +102,10 @@ const ExtendButton = styled.button<{ canExtend: boolean }>`
   width: 61px;
   height: 21px;
   align-items: center;
-  gap: 10px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 500;
+  cursor: ${({ canExtend }) => canExtend ? 'pointer' : 'not-allowed'};
   background: ${({ canExtend }) => canExtend ? '#334158' : '#3D3E41'};
   color: ${({ canExtend }) => canExtend ? '#5FA5F9' : '#9CA3AF'};
 `;
@@ -132,12 +118,18 @@ const CancelButton = styled.button`
   border-radius: 4px;
   font-family: "Pretendard Variable";
   font-size: 12px;
-  font-style: normal;
   font-weight: 500;
-  line-height: normal;
   background: #573535;
   color: #F26F6F;
   cursor: pointer;
+`;
+
+const EmptyNote = styled.p`
+  color: #676767;
+  font-family: "Pretendard Variable";
+  font-size: 14px;
+  text-align: center;
+  padding: 20px 0;
 `;
 
 const Notice = styled.p`
@@ -149,8 +141,8 @@ const Notice = styled.p`
   color: #5FFB7A;
   padding: 10px 183px 10px 184px;
   display: flex;
-  align-items: center;    
-  justify-content: center; 
+  align-items: center;
+  justify-content: center;
   margin: 20px 0 0 0;
   border-radius: 14px;
   background: #292F2A;
@@ -158,40 +150,74 @@ const Notice = styled.p`
   white-space: nowrap;
 `;
 
-interface Props {
-    onClose: () => void;
+import { BOOKS } from '../../data/books';
+
+function getBookTitle(bookId: number): string {
+    return BOOKS.find((b) => b.id === bookId)?.title ?? '알 수 없는 도서';
 }
 
-export function LoanStatusModal({ onClose }: Props) {
+interface Props {
+    onClose: () => void;
+    onChanged?: () => void;
+}
+
+export function LoanStatusModal({ onClose, onChanged }: Props) {
+    const { user } = useAuthStore();
+    const [loans, setLoans] = useState<BookLoan[]>([]);
     const [isExtendOpen, setIsExtendOpen] = useState(false);
-    const [selectedLoan, setSelectedLoan] = useState<LoanBook | null>(null);
+    const [selectedLoan, setSelectedLoan] = useState<BookLoan | null>(null);
     const [isCancelOpen, setIsCancelOpen] = useState(false);
-    const [selectedCancelLoan, setSelectedCancelLoan] = useState<LoanBook | null>(null);
+    const [selectedCancelLoan, setSelectedCancelLoan] = useState<BookLoan | null>(null);
+
+    function reload() {
+        if (user) setLoans(bookLoanStore.getByUser(user.id));
+    }
+
+    useEffect(() => { reload(); }, [user]);
+
+    function handleExtendConfirm() {
+        if (!selectedLoan) return;
+        bookLoanStore.extend(selectedLoan.id);
+        reload();
+        onChanged?.();
+        setIsExtendOpen(false);
+    }
+
+    function handleCancelConfirm() {
+        if (!selectedCancelLoan) return;
+        bookLoanStore.cancel(selectedCancelLoan.id);
+        reload();
+        onChanged?.();
+        setIsCancelOpen(false);
+    }
+
     return (
-        <Overlay onClick={() => {
-            if (!isExtendOpen && !isCancelOpen) onClose();}}>
+        <Overlay onClick={() => { if (!isExtendOpen && !isCancelOpen) onClose(); }}>
             <Card onClick={(e) => e.stopPropagation()}>
                 <CardTitle>현재 대여중인 도서</CardTitle>
                 <Table>
                     <TableHeader>
-                        <HeaderCell style={{fontWeight: 600}}>도서명</HeaderCell>
+                        <HeaderCell style={{ fontWeight: 600 }}>도서명</HeaderCell>
                         <HeaderCell>기간</HeaderCell>
                         <HeaderCell>대여 연장</HeaderCell>
                         <HeaderCell>대여 취소</HeaderCell>
                     </TableHeader>
-                    {loans.map((loan, i) => (
-                        <TableRow key={i}>
-                            <BookTitle>{loan.title}</BookTitle>
-                            <Period>{loan.period}</Period>
+                    {loans.length === 0 ? (
+                        <EmptyNote>현재 대여 중인 도서가 없습니다.</EmptyNote>
+                    ) : loans.map((loan) => (
+                        <TableRow key={loan.id}>
+                            <BookTitle>{getBookTitle(loan.bookId)}</BookTitle>
+                            <Period>{loan.startDate} ~ {loan.endDate}</Period>
                             <ExtendButton
-                                canExtend={loan.canExtend}
+                                canExtend={!loan.extended}
                                 onClick={() => {
-                                    if (loan.canExtend) {
+                                    if (!loan.extended) {
                                         setSelectedLoan(loan);
                                         setIsExtendOpen(true);
                                     }
-                                }}>
-                                {loan.canExtend ? '대여 연장' : '연장 불가'}
+                                }}
+                            >
+                                {loan.extended ? '연장 불가' : '대여 연장'}
                             </ExtendButton>
                             <CancelButton onClick={() => {
                                 setSelectedCancelLoan(loan);
@@ -202,16 +228,19 @@ export function LoanStatusModal({ onClose }: Props) {
                 </Table>
                 <Notice>💡 각 도서는 최대 1회까지 연장 가능합니다.</Notice>
             </Card>
-            {isExtendOpen && (
+
+            {isExtendOpen && selectedLoan && (
                 <ExtendConfirmModal
                     loan={selectedLoan}
                     onClose={() => setIsExtendOpen(false)}
+                    onConfirm={handleExtendConfirm}
                 />
             )}
-            {isCancelOpen && (
+            {isCancelOpen && selectedCancelLoan && (
                 <CancelConfirmModal
                     loan={selectedCancelLoan}
                     onClose={() => setIsCancelOpen(false)}
+                    onConfirm={handleCancelConfirm}
                 />
             )}
         </Overlay>
