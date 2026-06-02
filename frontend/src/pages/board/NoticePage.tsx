@@ -18,28 +18,28 @@ export default function NoticePage() {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [tick, setTick] = useState(0);
 
-  const reloadPinned = () =>
+  const refresh = () => setTick((n) => n + 1);
+
+  useEffect(() => {
     announcementService.getPinned().then(res => setPinned(res)).catch(() => {});
+  }, [tick]);
 
-  const reload = () => {
+  useEffect(() => {
     setLoading(true);
     announcementService.getList({ page, size: pageSize })
       .then(res => { setList(res.content); setTotalPages(Math.max(1, res.totalPages)); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  };
-
-  useEffect(() => { reloadPinned(); }, []);
-  useEffect(() => { reload(); }, [page, pageSize]);
+  }, [page, pageSize, tick]);
 
   const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm('삭제하시겠습니까?')) return;
     await announcementService.remove(id);
-    reloadPinned();
     setPage(0);
-    reload();
+    refresh();
   };
 
   const formatDate = (iso: string) =>

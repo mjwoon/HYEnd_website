@@ -30,23 +30,27 @@ export default function PostBoard({ boardType, adminOnly = false }: PostBoardPro
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [tick, setTick] = useState(0);
 
-  const reload = () => {
+  const refresh = () => setTick((n) => n + 1);
+
+  useEffect(() => {
     setLoading(true);
     postService.getList({ boardType, page, size: pageSize })
-      .then(res => { setList(res.content); setTotalPages(Math.max(1, res.totalPages)); })
+      .then(res => {
+        setList(res.content);
+        setTotalPages(Math.max(1, res.totalPages));
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
-  };
-
-  useEffect(() => { reload(); }, [page, pageSize]);
+  }, [page, pageSize, tick]);
 
   const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm('삭제하시겠습니까?')) return;
     await postService.remove(id);
     setPage(0);
-    reload();
+    refresh();
   };
 
   const formatDate = (iso: string) =>
