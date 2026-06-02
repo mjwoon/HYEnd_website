@@ -15,6 +15,7 @@ import FreeBoardPage from '@/pages/board/FreeBoardPage';
 import PostNewPage from '@/pages/board/PostNewPage';
 import PostDetailPage from '@/pages/board/PostDetailPage';
 import MyPostsPage from '@/pages/my/MyPostsPage';
+import MyProfilePage from '@/pages/my/MyProfilePage';
 import MyAssignmentsPage from '@/pages/my/MyAssignmentsPage';
 import MyScrapsPage from '@/pages/my/MyScrapsPage';
 import ContactPage from '@/pages/ContactPage';
@@ -44,6 +45,7 @@ export function AppRouter() {
           <Route path="board/free" element={<FreeBoardPage />} />
           <Route path="board/free/new" element={<PostNewPage />} />
           <Route path="board/free/:id" element={<PostDetailPage />} />
+          <Route path="my/profile" element={<MyProfilePage />} />
           <Route path="my/posts" element={<MyPostsPage />} />
           <Route path="my/assignments" element={<MyAssignmentsPage />} />
           <Route path="my/scraps" element={<MyScrapsPage />} />

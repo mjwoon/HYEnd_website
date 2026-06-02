@@ -339,7 +339,7 @@ export default function HomePage() {
               <Email>{user?.username ?? '-'}</Email>
             </>
             <ButtonRow>
-              <Button>내 정보</Button>
+              <Button onClick={() => navigate('/my/profile')}>내 정보</Button>
               <Button onClick={logout}>로그아웃</Button>
             </ButtonRow>
           </ProfileCard>
