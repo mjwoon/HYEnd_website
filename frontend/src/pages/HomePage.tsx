@@ -10,13 +10,22 @@ const Wrapper = styled.div`
 `;
 
 const NoticeBar = styled.div`
-  display:  flex;
+  display: flex;
   width: 100%;
   padding: 12px 70px;
   align-items: center;
   gap: 70px;
   background: rgba(249, 249, 249, 0.08);
   backdrop-filter: blur(5px);
+
+  @media (max-width: 999px) {
+    padding: 12px 30px;
+    gap: 30px;
+  }
+  @media (max-width: 639px) {
+    padding: 10px 16px;
+    gap: 12px;
+  }
 `;
 
 const NoticeLabel = styled.span`
@@ -24,35 +33,82 @@ const NoticeLabel = styled.span`
   text-align: center;
   font-family: "Pretendard Variable";
   font-size: 14px;
-  font-style: normal;
   font-weight: 700;
-  line-height: normal;
   letter-spacing: -0.56px;
+  white-space: nowrap;
 `;
 
 const NoticeText = styled.span`
   color: #FFF;
-  text-align: center;
   font-family: "Pretendard Variable";
   font-size: 13px;
-  font-style: normal;
   font-weight: 400;
-  line-height: normal;
   letter-spacing: -0.52px;
   text-decoration-line: underline;
-  text-decoration-style: solid;
-  text-decoration-skip-ink: auto;
-  text-decoration-thickness: auto;
-  text-underline-offset: auto;
-  text-underline-position: from-font;
   cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 639px) {
+    font-size: 12px;
+  }
 `;
 
+/* ── 전체 레이아웃 ─────────────────────────────
+   Desktop (≥1000px): [LeftCol] [CenterRight → row]
+   Tablet  (640–999px): [LeftCol] [CenterRight → column]
+   Mobile  (<640px): 세로 스택
+───────────────────────────────────────────────── */
 const MainContent = styled.div`
   display: flex;
   padding: 40px 70px 40px 41px;
   align-items: flex-start;
-  gap: 41px;
+  gap: 30px;
+
+  @media (max-width: 999px) {
+    padding: 28px 30px;
+    gap: 20px;
+  }
+  @media (max-width: 639px) {
+    flex-direction: column;
+    padding: 20px 16px;
+    gap: 16px;
+  }
+`;
+
+/* 좌측: 프로필 + 도서 버튼 */
+const LeftCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+
+  @media (max-width: 639px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    align-items: flex-start;
+  }
+`;
+
+/* 우측: 게시판 + 달력 */
+const CenterRight = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+
+  @media (max-width: 999px) {
+    flex-direction: column;
+    gap: 20px;
+  }
+  @media (max-width: 639px) {
+    width: 100%;
+    gap: 16px;
+  }
 `;
 
 const ProfileCard = styled.div`
@@ -65,6 +121,11 @@ const ProfileCard = styled.div`
   border: 1px solid #40423F;
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(7px);
+
+  @media (max-width: 639px) {
+    flex: 1;
+    min-width: 180px;
+  }
 `;
 
 const ProfileImage = styled.div`
@@ -83,6 +144,10 @@ const Name = styled.p`
   line-height: normal;
   letter-spacing: 2.24px;
   margin: 0;
+
+  @media (max-width: 639px) {
+    font-size: 22px;
+  }
 `;
 
 const InfoRow = styled.div`
@@ -127,7 +192,6 @@ const Button = styled.button`
   text-align: center;
   font-family: "Pretendard Variable";
   font-size: 12px;
-  font-style: normal;
   font-weight: 500;
   line-height: normal;
   justify-content: center;
@@ -137,23 +201,6 @@ const Button = styled.button`
     background: rgba(255, 255, 255, 0.14);
   }
 `;
-
-// const MenuItem = styled.div`
-//   display: flex;
-//   width: 230px;
-//   height: 38px;
-//   padding: 15px 20px;
-//   align-items: center;
-//   gap: 10px;
-//   border-radius: 8px;
-//   background: rgba(255, 255, 255, 0.04);
-//   transition: background 0.2s ease;
-//   cursor: pointer;
-//
-//   &:hover {
-//     background: rgba(255, 255, 255, 0.14);
-//   }
-// `;
 
 const Bookitem = styled.div`
   display: flex;
@@ -168,21 +215,36 @@ const Bookitem = styled.div`
   cursor: pointer;
 
   &:hover {
-    border-radius: 50px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     background: rgba(255, 255, 255, 0.10);
   }
+
+  @media (max-width: 639px) {
+    width: 100%;
+  }
 `;
 
+/* 게시판 영역:
+   Desktop: 세로 스택, 카드 326px
+   Tablet: 세로 스택, 카드 100%
+   Mobile: 세로 스택, 카드 100%
+*/
 const BoardSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex-shrink: 0;
+  width: 326px;
+
+  @media (max-width: 999px) {
+    width: 100%;
+    flex-shrink: 1;
+  }
 `;
 
 const BoardCard = styled.div`
   display: flex;
-  width: 326px;
+  width: 100%;
   padding: 20px;
   flex-direction: column;
   justify-content: center;
@@ -193,6 +255,7 @@ const BoardCard = styled.div`
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(7px);
   transition: background 0.2s ease;
+  box-sizing: border-box;
 
   &:hover {
     background: rgba(255, 255, 255, 0.10);
@@ -229,7 +292,6 @@ const BoardItem = styled.div`
   width: 100%;
   font-size: 13px;
   color: #C0C2C0;
-  padding: 0;
   transition: color 0.2s ease;
   gap: 8px;
   cursor: pointer;
@@ -237,10 +299,7 @@ const BoardItem = styled.div`
   &:hover {
     color: #FFF;
     text-decoration-line: underline;
-    text-decoration-style: solid;
     text-decoration-skip-ink: auto;
-    text-decoration-thickness: auto;
-    text-underline-offset: auto;
   }
   &:hover ${BoardTime} {
     color: #FFF;
@@ -321,63 +380,65 @@ export default function HomePage() {
         <NoticeLabel>공지사항</NoticeLabel>
         <NoticeText>📢 재학생 프로젝트 2차 과제 마감일 공지</NoticeText>
       </NoticeBar>
+
       <MainContent>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* ── 좌측: 프로필 + 도서 버튼 ── */}
+        <LeftCol>
           <ProfileCard>
             <ProfileImage />
-            <>
-              <Name>{user?.fullName || user?.username || '-'}</Name>
-              <InfoSection>
-                <InfoRow>
-                  {user?.role && (
-                    <RoleTag role={user.role.toUpperCase()}>
-                      {user.role.toUpperCase()}
-                    </RoleTag>
-                  )}
-                </InfoRow>
-              </InfoSection>
-              <Email>{user?.username ?? '-'}</Email>
-            </>
+            <Name>{user?.fullName || user?.username || '-'}</Name>
+            <InfoSection>
+              <InfoRow>
+                {user?.role && (
+                  <RoleTag role={user.role.toUpperCase()}>
+                    {user.role.toUpperCase()}
+                  </RoleTag>
+                )}
+              </InfoRow>
+            </InfoSection>
+            <Email>{user?.username ?? '-'}</Email>
             <ButtonRow>
               <Button onClick={() => navigate('/my/profile')}>내 정보</Button>
               <Button onClick={logout}>로그아웃</Button>
             </ButtonRow>
           </ProfileCard>
-          {/*<MenuItem onClick={() => navigate('/my/posts')}>✍🏻 내가 쓴 글</MenuItem>*/}
-          {/*<MenuItem onClick={() => navigate('/my/assignments')}>📝 내 과제</MenuItem>*/}
-          {/*<MenuItem onClick={() => navigate('/my/scraps')}>⭐ 내 스크랩</MenuItem>*/}
           <Bookitem onClick={() => navigate('/books')}>
             📚 도서 대여하러 가기
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="11" viewBox="0 0 13 11" fill="none">
               <path d="M0.699219 5.19922H11.6992M7.29922 9.69922L11.6992 5.19922L7.29922 0.699219" stroke="#C0C2C0" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </Bookitem>
-        </div>
-        <BoardSection>
-          {BOARDS.map(({ type, label, path }) => (
-            <BoardCard key={type}>
-              <BoardHeader onClick={() => navigate(path)}>
-                <span>{label}</span>
-                <span>›</span>
-              </BoardHeader>
-              {loadingBoards ? (
-                Array.from({ length: 5 }).map((_, i) => <SkeletonLine key={i} />)
-              ) : boardPosts[type].length === 0 ? (
-                <BoardItem style={{ cursor: 'default' }}>
-                  <BoardTitle style={{ color: '#676767' }}>게시글이 없습니다</BoardTitle>
-                </BoardItem>
-              ) : (
-                boardPosts[type].map((post) => (
-                  <BoardItem key={post.id} onClick={() => navigate(path)}>
-                    <BoardTitle>{post.title}</BoardTitle>
-                    <BoardTime>{formatRelativeTime(post.createdAt)}</BoardTime>
+        </LeftCol>
+
+        {/* ── 우측: 게시판 + 달력 ── */}
+        <CenterRight>
+          <BoardSection>
+            {BOARDS.map(({ type, label, path }) => (
+              <BoardCard key={type}>
+                <BoardHeader onClick={() => navigate(path)}>
+                  <span>{label}</span>
+                  <span>›</span>
+                </BoardHeader>
+                {loadingBoards ? (
+                  Array.from({ length: 5 }).map((_, i) => <SkeletonLine key={i} />)
+                ) : boardPosts[type].length === 0 ? (
+                  <BoardItem style={{ cursor: 'default' }}>
+                    <BoardTitle style={{ color: '#676767' }}>게시글이 없습니다</BoardTitle>
                   </BoardItem>
-                ))
-              )}
-            </BoardCard>
-          ))}
-        </BoardSection>
-        <HomeCalendar />
+                ) : (
+                  boardPosts[type].map((post) => (
+                    <BoardItem key={post.id} onClick={() => navigate(path)}>
+                      <BoardTitle>{post.title}</BoardTitle>
+                      <BoardTime>{formatRelativeTime(post.createdAt)}</BoardTime>
+                    </BoardItem>
+                  ))
+                )}
+              </BoardCard>
+            ))}
+          </BoardSection>
+
+          <HomeCalendar />
+        </CenterRight>
       </MainContent>
     </Wrapper>
   );

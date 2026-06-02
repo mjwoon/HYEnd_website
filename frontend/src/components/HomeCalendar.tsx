@@ -16,22 +16,24 @@ const Card = styled.div`
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(7px);
   overflow: hidden;
-  width: 320px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 280px;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px 14px;
+  padding: 20px 22px 18px;
   border-bottom: 1px solid #40423F;
 `;
 
 const MonthLabel = styled.span`
   color: #FFF;
   font-family: "Pretendard Variable";
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
 `;
 
@@ -70,7 +72,7 @@ const AddBtn = styled.button`
 `;
 
 const GridWrap = styled.div`
-  padding: 12px 14px 8px;
+  padding: 16px 18px 10px;
 `;
 
 const DayHeader = styled.div`
@@ -82,16 +84,16 @@ const DayHeader = styled.div`
 const DayName = styled.span<{ sun?: boolean; sat?: boolean }>`
   text-align: center;
   font-family: "Pretendard Variable";
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: ${({ sun }) => sun ? '#F87171' : ({ sat }: { sat?: boolean }) => sat ? '#60A5FA' : '#676767'};
-  padding: 2px 0;
+  padding: 4px 0;
 `;
 
 const DateGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 4px;
 `;
 
 const DateCell = styled.button<{
@@ -105,9 +107,9 @@ const DateCell = styled.button<{
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 5px 0 4px;
+  padding: 8px 0 6px;
   border-radius: 8px;
-  gap: 3px;
+  gap: 4px;
   background: ${({ isSelected, isToday }) =>
     isSelected ? 'rgba(255,255,255,0.12)' :
     isToday ? 'rgba(95,251,122,0.10)' :
@@ -125,7 +127,7 @@ const DateCell = styled.button<{
 
 const DateNum = styled.span<{ isToday: boolean; isSun: boolean; isSat: boolean; otherMonth: boolean }>`
   font-family: "Pretendard Variable";
-  font-size: 12px;
+  font-size: 14px;
   font-weight: ${({ isToday }) => isToday ? 700 : 500};
   color: ${({ otherMonth }) => otherMonth ? '#3A3A3A' :
     ({ isSun }: { isSun: boolean; isSat: boolean; otherMonth: boolean; isToday: boolean }) => isSun ? '#F87171' :
@@ -152,11 +154,11 @@ const Dot = styled.span<{ color: string }>`
 const Divider = styled.div`
   height: 1px;
   background: #40423F;
-  margin: 0 14px;
+  margin: 0 18px;
 `;
 
 const EventSection = styled.div`
-  padding: 12px 14px 14px;
+  padding: 14px 18px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -217,7 +219,7 @@ const EmptyNote = styled.span`
 
 // Add form
 const AddForm = styled.div`
-  padding: 12px 14px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
