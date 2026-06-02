@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { postService, type PostSummary, type BoardType } from '../services/postService';
 import { useAuthStore } from '../store/authStore';
+import HomeCalendar from '../components/HomeCalendar';
 
 const Wrapper = styled.div`
   color: white;
@@ -177,7 +178,6 @@ const BoardSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  flex: 1;
 `;
 
 const BoardCard = styled.div`
@@ -377,6 +377,7 @@ export default function HomePage() {
             </BoardCard>
           ))}
         </BoardSection>
+        <HomeCalendar />
       </MainContent>
     </Wrapper>
   );
