@@ -25,7 +25,7 @@ public class RateLimitConfig implements WebMvcConfigurer {
 
     static class RateLimitInterceptor implements HandlerInterceptor {
 
-        private static final int AUTH_CAPACITY = 5;
+        private static final int AUTH_CAPACITY = 30;
         private static final int GENERAL_CAPACITY = 100;
 
         // IP당 버킷을 최대 크기와 비활성 만료로 바인딩 — ConcurrentHashMap의 무한 증가 방지

@@ -3,6 +3,7 @@ import {useNavigate} from 'react-router-dom';
 import styled from 'styled-components';
 import {motion} from 'motion/react';
 import {authService} from '@/services/authService';
+import {userService} from '@/services/userService';
 import {useAuthStore} from '@/store/authStore';
 
 const Container = styled.div`
@@ -178,7 +179,17 @@ export default function LoginModal({onClose, onSwitchToSignUp}: LoginModalProps)
             const {accessToken, refreshToken} = res.data.data;
             localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
-            const user = {id: 0, username: email, fullName: email.split('@')[0] ?? email, role: 'student' as const};
+            
+            // Fetch real user info from backend
+            const userRes = await userService.getMe();
+            const { id, name, email: userEmail, role } = userRes.data.data;
+            const user = {
+                id,
+                username: userEmail,
+                fullName: name,
+                role: role.toLowerCase() as 'student' | 'staff' | 'admin'
+            };
+            
             localStorage.setItem('userInfo', JSON.stringify(user));
             setUser(user);
             onClose?.();

@@ -30,9 +30,16 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"success\":false,\"message\":\"인증이 필요합니다.\"}");
+                })
+            )
             .authorizeHttpRequests(auth -> auth
-                // 공개 엔드포인트
-                .requestMatchers("/api/auth/**").permitAll()
+                // 공개 엔드포인트 (me, logout 제외)
+                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/announcements", "/api/announcements/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()

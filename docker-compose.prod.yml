@@ -1,16 +1,18 @@
+version: '3.8'
+
 services:
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "80:80" # 일반 HTTP 접속용 포트
     environment:
-      - VITE_API_URL=http://backend:8080
+      # 브라우저가 인식할 수 있도록 EC2의 퍼블릭 IP나 도메인 주소를 입력해야 합니다.
+      - VITE_API_URL=http://<YOUR_EC2_PUBLIC_IP>:8080 
     depends_on:
       backend:
         condition: service_healthy
-    networks:
-      - frontend-net
     deploy:
       resources:
         limits:
@@ -21,14 +23,13 @@ services:
     build:
       context: ./admin
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "81:80" # 관리자용 페이지는 81번 포트로 서비스
     environment:
-      - VITE_API_URL=http://backend:8080
+      - VITE_API_URL=http://<YOUR_EC2_PUBLIC_IP>:8080
     depends_on:
       backend:
         condition: service_healthy
-    networks:
-      - frontend-net
     deploy:
       resources:
         limits:
@@ -39,21 +40,22 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    restart: unless-stopped
+    ports:
+      - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/hyend
-      - SPRING_DATASOURCE_USERNAME=${DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}       # .env 파일에서 주입
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}   # .env 파일에서 주입
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
-      - SPRING_PROFILES_ACTIVE=prod
-      - JWT_SECRET=${SECRET_KEY}
+      - SPRING_PROFILES_ACTIVE=prod                 # 운영용 프로필로 전환
+      - JWT_SECRET=${SECRET_KEY}                     # .env 파일에서 주입
       - JAVA_OPTS=-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
-      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
-      - AWS_S3_REGION=${AWS_S3_REGION}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - FILE_STORAGE_TYPE=s3
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}               # .env 파일에서 주입
+      - AWS_S3_REGION=${AWS_S3_REGION}               # .env 파일에서 주입
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}       # .env 파일에서 주입
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} # .env 파일에서 주입
+      - FILE_STORAGE_TYPE=s3                        # 로컬 업로드 대신 S3 전용 모드 활성화
     depends_on:
       db:
         condition: service_healthy
@@ -65,8 +67,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
-    volumes:
-      - upload_data:/app/uploads
+    # S3를 완전 사용하므로 기존 로컬 대용량 볼륨 바인딩 제거
     networks:
       - frontend-net
       - backend-net
@@ -78,11 +79,11 @@ services:
 
   db:
     image: postgres:16-alpine
-    restart: unless-stopped
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=hyend
+    # 운영 환경에서는 외부에서 DB 툴로 직접 붙지 못하게 외부 포트 바인딩 제거 (보안 강화)
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -101,8 +102,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    restart: unless-stopped
-    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:
@@ -121,7 +120,6 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  upload_data:
 
 networks:
   frontend-net:
