@@ -1,6 +1,5 @@
 package com.hyend.mapper;
 
-import com.hyend.dto.announcement.AnnouncementRequest;
 import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.dto.announcement.AnnouncementSummary;
 import com.hyend.entity.Announcement;

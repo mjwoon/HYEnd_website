@@ -1,6 +1,5 @@
 package com.hyend.mapper;
 
-import com.hyend.dto.event.EventRequest;
 import com.hyend.dto.event.EventResponse;
 import com.hyend.entity.Event;
 import org.mapstruct.Mapper;
