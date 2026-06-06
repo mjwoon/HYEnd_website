@@ -5,10 +5,11 @@ import com.hyend.dto.auth.LoginRequest;
 import com.hyend.dto.auth.RefreshRequest;
 import com.hyend.dto.auth.RegisterRequest;
 import com.hyend.dto.auth.TokenResponse;
-import com.hyend.entity.RefreshToken;
 import com.hyend.entity.User;
 import com.hyend.exception.BusinessException;
 import com.hyend.repository.RefreshTokenRepository;
+
+import java.util.Optional;
 import com.hyend.repository.UserRepository;
 import com.hyend.security.JwtTokenProvider;
 import com.hyend.security.UserPrincipal;
@@ -17,6 +18,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +56,7 @@ public class AuthService {
             authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password())
             );
-        } catch (BadCredentialsException e) {
+        } catch (AuthenticationException e) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
@@ -64,17 +66,33 @@ public class AuthService {
 
     @Transactional
     public TokenResponse refresh(RefreshRequest request) {
-        RefreshToken stored = refreshTokenRepository.findByToken(request.refreshToken())
-                .orElseThrow(() -> new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
+        String token = request.refreshToken();
 
-        if (stored.getExpiresAt().isBefore(LocalDateTime.now())) {
-            refreshTokenRepository.delete(stored);
-            throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
+        // 1. Grace Period 캐시 확인
+        Optional<TokenResponse> cachedResponse = refreshTokenRepository.findGracePeriod(token);
+        if (cachedResponse.isPresent()) {
+            return cachedResponse.get();
         }
 
-        User user = stored.getUser();
-        refreshTokenRepository.delete(stored);
-        return issueTokens(user.getId(), user.getEmail(), user.getRole().name());
+        // 2. JWT 토큰 검증 (만료 여부 등 검증, 만료 시 EXPIRED_TOKEN 예외 자동 발생)
+        jwtTokenProvider.parseClaims(token);
+
+        // 3. Redis에서 원래 토큰 조회
+        Long userId = refreshTokenRepository.findUserIdByToken(token)
+                .orElseThrow(() -> new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
+
+        // 4. 사용자 정보 조회 및 토큰 재발급
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 기존 토큰 삭제 및 신규 토큰 발급
+        refreshTokenRepository.delete(token);
+        TokenResponse newTokens = issueTokens(user.getId(), user.getEmail(), user.getRole().name());
+
+        // 5. Grace Period 캐시 저장 (10초)
+        refreshTokenRepository.saveGracePeriod(token, newTokens, 10000L);
+
+        return newTokens;
     }
 
     @Transactional
@@ -86,12 +104,11 @@ public class AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(userId, email, role);
         String refreshToken = jwtTokenProvider.createRefreshToken(userId, email, role);
 
-        LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(jwtTokenProvider.getRefreshTokenExpiryMs() / 1000);
+        long expiryMs = jwtTokenProvider.getRefreshTokenExpiryMs();
 
-        User user = userRepository.getReferenceById(userId);
-        refreshTokenRepository.save(RefreshToken.of(user, refreshToken, expiresAt));
+        // Redis에 새 토큰 저장
+        refreshTokenRepository.save(refreshToken, userId, expiryMs);
 
-        return TokenResponse.of(accessToken, refreshToken, 15 * 60 * 1000L);
+        return TokenResponse.of(accessToken, refreshToken, jwtTokenProvider.getAccessTokenExpiryMs());
     }
 }

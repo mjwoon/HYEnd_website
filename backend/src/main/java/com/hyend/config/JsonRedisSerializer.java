@@ -7,8 +7,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 
-import java.nio.charset.StandardCharsets;
-
 /**
  * Spring Boot 4.x에서 deprecated된 Jackson Redis 시리얼라이저 대체 구현.
  * ObjectMapper를 직접 사용해 타입 정보를 포함한 JSON 직렬화를 수행한다.

@@ -1,5 +1,9 @@
 package com.hyend.mapper;
 
-// TODO [H-3] 사용자 MapStruct Mapper 구현
+import org.mapstruct.Mapper;
+
+@Mapper(componentModel="spring")
 public interface UserMapper {
+    // User toEntity(RegisterRequest request);
+
 }

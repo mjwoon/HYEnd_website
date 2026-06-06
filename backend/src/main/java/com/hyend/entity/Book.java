@@ -1,5 +1,7 @@
 package com.hyend.entity;
 
+import com.hyend.common.ErrorCode;
+import com.hyend.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,7 +44,7 @@ public class Book extends BaseTimeEntity {
 
     public void decreaseAvailable() {
         if (this.availableCopies <= 0) {
-            throw new IllegalStateException("대출 가능한 도서가 없습니다.");
+            throw new BusinessException(ErrorCode.BOOK_NOT_AVAILABLE);
         }
         this.availableCopies--;
     }
