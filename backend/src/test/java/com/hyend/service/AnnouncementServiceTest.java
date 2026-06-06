@@ -1,7 +1,6 @@
 package com.hyend.service;
 
 import com.hyend.dto.announcement.AnnouncementRequest;
-import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.entity.Announcement;
 import com.hyend.entity.Category;
 import com.hyend.entity.User;
