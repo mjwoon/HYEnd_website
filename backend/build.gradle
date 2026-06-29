@@ -19,6 +19,9 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	all {
+		exclude group: 'com.google.guava', module: 'listenablefuture'
+	}
 }
 
 repositories {
@@ -63,6 +66,15 @@ dependencies {
 
 	// AWS S3
 	implementation 'software.amazon.awssdk:s3:2.31.43'
+
+	// WebSocket (STOMP)
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	// LiveKit Server SDK
+	implementation 'io.livekit:livekit-server:0.6.1'
+
+	// Firebase Admin SDK
+	implementation 'com.google.firebase:firebase-admin:9.4.1'
 
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
