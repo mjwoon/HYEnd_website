@@ -58,3 +58,28 @@ logging:
     root: INFO
     com.hyend: DEBUG
     org.springframework.security: DEBUG
+
+livekit:
+  api-key: ${LIVEKIT_API_KEY}
+  api-secret: ${LIVEKIT_API_SECRET}
+  server-url: ${LIVEKIT_SERVER_URL:https://your-project.livekit.cloud}
+
+openai:
+  api-key: ${OPENAI_API_KEY}
+  whisper-model: whisper-1
+  gpt-model: gpt-4o-mini
+
+firebase:
+  credentials-path: ${FIREBASE_CREDENTIALS_PATH:}
+
+ai:
+  quota:
+    whisper-daily-seconds: 3600
+    whisper-meeting-max-seconds: 10800
+    llm-monthly-tokens: 100000
+    llm-meeting-max-count: 3
+
+meeting:
+  invite:
+    default-expire-hours: 24
+    max-expire-hours: 168

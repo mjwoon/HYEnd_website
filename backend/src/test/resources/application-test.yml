@@ -49,3 +49,28 @@ logging:
   level:
     root: WARN
     com.hyend: INFO
+
+livekit:
+  api-key: test-key
+  api-secret: test-secret-that-is-long-enough-32ch
+  server-url: https://test.livekit.cloud
+
+openai:
+  api-key: test-openai-key
+  whisper-model: whisper-1
+  gpt-model: gpt-4o-mini
+
+firebase:
+  credentials-path:
+
+ai:
+  quota:
+    whisper-daily-seconds: 3600
+    whisper-meeting-max-seconds: 10800
+    llm-monthly-tokens: 100000
+    llm-meeting-max-count: 3
+
+meeting:
+  invite:
+    default-expire-hours: 24
+    max-expire-hours: 168
