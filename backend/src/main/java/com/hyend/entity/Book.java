@@ -1,7 +1,5 @@
 package com.hyend.entity;
 
-import com.hyend.common.ErrorCode;
-import com.hyend.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,12 +40,7 @@ public class Book extends BaseTimeEntity {
         return book;
     }
 
-    public void decreaseAvailable() {
-        if (this.availableCopies <= 0) {
-            throw new BusinessException(ErrorCode.BOOK_NOT_AVAILABLE);
-        }
-        this.availableCopies--;
-    }
+    // 재고 감소는 동시성 안전을 위해 BookRepository.decrementAvailableIfPositive(원자적 UPDATE)로 처리한다.
 
     public void increaseAvailable() {
         this.availableCopies++;

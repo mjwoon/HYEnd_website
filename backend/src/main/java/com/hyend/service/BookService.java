@@ -53,12 +53,6 @@ public class BookService {
     @Transactional
     @CacheEvict(value = "books", allEntries = true)
     public RentalResponse rentBook(Long bookId, Long userId) {
-        Book book = findBook(bookId);
-
-        if (book.getAvailableCopies() <= 0) {
-            throw new BusinessException(ErrorCode.BOOK_NOT_AVAILABLE);
-        }
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -66,8 +60,18 @@ public class BookService {
             throw new BusinessException(ErrorCode.ALREADY_RENTED);
         }
 
+        // 재고를 원자적으로 감소시킨다. 갱신된 행이 없으면 재고가 없거나 도서가 존재하지 않는 것.
+        // 동시 요청에서도 available_copies > 0 조건이 DB에서 원자적으로 평가되어 oversell이 불가능하다.
+        int updated = bookRepository.decrementAvailableIfPositive(bookId);
+        if (updated == 0) {
+            if (!bookRepository.existsById(bookId)) {
+                throw new BusinessException(ErrorCode.BOOK_NOT_FOUND);
+            }
+            throw new BusinessException(ErrorCode.BOOK_NOT_AVAILABLE);
+        }
+
+        Book book = findBook(bookId);
         BookRental rental = BookRental.of(book, user, LocalDateTime.now().plusDays(rentalDays));
-        book.decreaseAvailable();
         return bookMapper.toResponse(rentalRepository.save(rental));
     }
 
