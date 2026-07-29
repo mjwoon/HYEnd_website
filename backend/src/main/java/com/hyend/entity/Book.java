@@ -40,9 +40,6 @@ public class Book extends BaseTimeEntity {
         return book;
     }
 
-    // 재고 감소는 동시성 안전을 위해 BookRepository.decrementAvailableIfPositive(원자적 UPDATE)로 처리한다.
-
-    public void increaseAvailable() {
-        this.availableCopies++;
-    }
+    // 재고 증감은 동시성 안전을 위해 BookRepository의 원자적 UPDATE
+    // (decrementAvailableIfPositive / incrementAvailable)로 처리한다.
 }

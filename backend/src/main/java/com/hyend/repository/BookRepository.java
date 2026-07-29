@@ -24,4 +24,12 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @Query("update Book b set b.availableCopies = b.availableCopies - 1 " +
            "where b.id = :id and b.availableCopies > 0")
     int decrementAvailableIfPositive(@Param("id") Long id);
+
+    /**
+     * 재고를 원자적으로 1 증가시킨다(반납·취소). 동시 반납에서도 lost update 없이
+     * 증가가 정확히 반영된다. (호출부에서 대여 상태 전이가 성공한 경우에만 호출한다.)
+     */
+    @Modifying
+    @Query("update Book b set b.availableCopies = b.availableCopies + 1 where b.id = :id")
+    int incrementAvailable(@Param("id") Long id);
 }

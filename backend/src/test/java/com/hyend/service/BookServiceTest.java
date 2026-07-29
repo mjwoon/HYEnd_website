@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -80,30 +81,32 @@ class BookServiceTest {
     }
 
     @Test
-    @DisplayName("도서 반납 - 성공")
+    @DisplayName("도서 반납 - 성공 (원자적 상태 전이 + 재고 증가)")
     void returnBook_success() {
         BookRental rental = mock(BookRental.class);
         Book book = mock(Book.class);
 
         given(bookRentalRepository.findById(1L)).willReturn(Optional.of(rental));
-        given(rental.getStatus()).willReturn(BookRental.RentalStatus.ACTIVE);
+        given(bookRentalRepository.markStatusWithReturnedAt(eq(1L), any(), any(), any())).willReturn(1);
         given(rental.getBook()).willReturn(book);
+        given(book.getId()).willReturn(5L);
 
         assertThatCode(() -> bookService.returnBook(1L)).doesNotThrowAnyException();
 
-        then(rental).should().returnBook();
-        then(book).should().increaseAvailable();
+        then(bookRepository).should().incrementAvailable(5L);
     }
 
     @Test
-    @DisplayName("도서 반납 - 이미 반납된 대출")
+    @DisplayName("도서 반납 - 이미 반납/취소된 대출 (전이 행 0)")
     void returnBook_notActive() {
         BookRental rental = mock(BookRental.class);
 
         given(bookRentalRepository.findById(1L)).willReturn(Optional.of(rental));
-        given(rental.getStatus()).willReturn(BookRental.RentalStatus.RETURNED);
+        given(bookRentalRepository.markStatusWithReturnedAt(eq(1L), any(), any(), any())).willReturn(0);
 
         assertThatThrownBy(() -> bookService.returnBook(1L))
                 .isInstanceOf(BusinessException.class);
+
+        then(bookRepository).should(never()).incrementAvailable(anyLong());
     }
 }

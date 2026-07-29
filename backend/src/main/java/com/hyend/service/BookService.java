@@ -79,11 +79,13 @@ public class BookService {
     @CacheEvict(value = "books", allEntries = true)
     public void returnBook(Long rentalId) {
         BookRental rental = findRental(rentalId);
-        if (rental.getStatus() != BookRental.RentalStatus.ACTIVE) {
+        // ACTIVE일 때만 원자적으로 RETURNED 전이. 갱신 행이 0이면 이미 반납/취소된 것.
+        int changed = rentalRepository.markStatusWithReturnedAt(
+                rentalId, BookRental.RentalStatus.ACTIVE, BookRental.RentalStatus.RETURNED, LocalDateTime.now());
+        if (changed == 0) {
             throw new BusinessException(ErrorCode.RENTAL_NOT_ACTIVE);
         }
-        rental.returnBook();
-        rental.getBook().increaseAvailable();
+        bookRepository.incrementAvailable(rental.getBook().getId());
     }
 
     public boolean isOverdue(Long rentalId) {
@@ -113,11 +115,13 @@ public class BookService {
     public void cancelRental(Long rentalId, Long userId) {
         BookRental rental = rentalRepository.findByIdAndUserId(rentalId, userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RENTAL_NOT_FOUND));
-        if (rental.getStatus() != BookRental.RentalStatus.ACTIVE) {
+        // ACTIVE일 때만 원자적으로 CANCELLED 전이. 갱신 행이 0이면 이미 반납/취소된 것.
+        int changed = rentalRepository.markStatus(
+                rentalId, BookRental.RentalStatus.ACTIVE, BookRental.RentalStatus.CANCELLED);
+        if (changed == 0) {
             throw new BusinessException(ErrorCode.RENTAL_NOT_ACTIVE);
         }
-        rental.cancel();
-        rental.getBook().increaseAvailable();
+        bookRepository.incrementAvailable(rental.getBook().getId());
     }
 
     private Book findBook(Long id) {

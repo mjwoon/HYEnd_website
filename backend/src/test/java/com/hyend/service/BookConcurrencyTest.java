@@ -1,7 +1,9 @@
 package com.hyend.service;
 
 import com.hyend.entity.Book;
+import com.hyend.entity.BookRental;
 import com.hyend.entity.User;
+import com.hyend.repository.BookRentalRepository;
 import com.hyend.repository.BookRepository;
 import com.hyend.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,7 @@ class BookConcurrencyTest {
     @Autowired BookService bookService;
     @Autowired BookRepository bookRepository;
     @Autowired UserRepository userRepository;
+    @Autowired BookRentalRepository bookRentalRepository;
 
     // @CacheEvict가 Redis에 접근하지 않도록 인메모리 캐시 매니저로 대체한다.
     @TestConfiguration
@@ -87,5 +90,46 @@ class BookConcurrencyTest {
         Book reloaded = bookRepository.findById(book.getId()).orElseThrow();
         assertThat(success.get()).isEqualTo(1);
         assertThat(reloaded.getAvailableCopies()).isEqualTo(0);
+    }
+
+    @Test
+    void concurrentReturn_incrementsStockExactlyOnce() throws InterruptedException {
+        Book book = bookRepository.save(Book.of("반납 동시성 도서", "저자", "isbn-conc-2", 1));
+        User user = userRepository.save(User.of("return@test.com", "pw", "user", User.Role.STUDENT));
+        bookService.rentBook(book.getId(), user.getId());   // availableCopies 1 -> 0
+        Long rentalId = bookRentalRepository
+                .findByUserIdAndStatus(user.getId(), BookRental.RentalStatus.ACTIVE)
+                .get(0).getId();
+
+        int threadCount = 20;
+        ExecutorService pool = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch ready = new CountDownLatch(threadCount);
+        CountDownLatch start = new CountDownLatch(1);
+        CountDownLatch done = new CountDownLatch(threadCount);
+        AtomicInteger success = new AtomicInteger();
+
+        for (int i = 0; i < threadCount; i++) {
+            pool.submit(() -> {
+                ready.countDown();
+                try {
+                    start.await();
+                    bookService.returnBook(rentalId);   // 같은 대여를 동시에 반납 시도
+                    success.incrementAndGet();
+                } catch (Exception ignored) {
+                    // 이미 반납됨 등 실패는 정상 (성공은 정확히 1건)
+                } finally {
+                    done.countDown();
+                }
+            });
+        }
+
+        ready.await();
+        start.countDown();
+        done.await(10, TimeUnit.SECONDS);
+        pool.shutdownNow();
+
+        Book reloaded = bookRepository.findById(book.getId()).orElseThrow();
+        assertThat(success.get()).isEqualTo(1);
+        assertThat(reloaded.getAvailableCopies()).isEqualTo(1);   // over-count 없이 정확히 1회 증가
     }
 }
