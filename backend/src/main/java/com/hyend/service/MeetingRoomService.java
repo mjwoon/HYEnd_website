@@ -27,13 +27,15 @@ public class MeetingRoomService {
         User host = findUser(userId);
         String livekitRoomName = UUID.randomUUID().toString();
         MeetingRoom room = MeetingRoom.of(request.title(), request.description(), host, livekitRoomName);
+        // DB에 먼저 저장한 뒤 외부(LiveKit) 방을 생성한다.
+        // createRoom이 실패하면 BusinessException으로 트랜잭션이 롤백되어 회의방 레코드가 남지 않는다.
+        MeetingRoom saved = roomRepository.save(room);
         liveKitService.createRoom(livekitRoomName);
-        return MeetingRoomResponse.from(roomRepository.save(room));
+        return MeetingRoomResponse.from(saved);
     }
 
     public List<MeetingRoomSummary> getList() {
-        return roomRepository.findAll().stream()
-                .filter(r -> r.getStatus() != MeetingRoom.Status.ENDED)
+        return roomRepository.findByStatusNot(MeetingRoom.Status.ENDED).stream()
                 .map(MeetingRoomSummary::from)
                 .toList();
     }

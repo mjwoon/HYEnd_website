@@ -1,5 +1,6 @@
 package com.hyend.service;
 
+import com.hyend.common.ErrorCode;
 import com.hyend.dto.meeting.JoinMeetingResponse;
 import com.hyend.dto.meeting.MeetingRoomRequest;
 import com.hyend.dto.meeting.MeetingRoomResponse;
@@ -74,6 +75,17 @@ class MeetingRoomServiceTest {
         assertThatThrownBy(() -> meetingRoomService.create(new MeetingRoomRequest("제목", "설명"), 1L))
                 .isInstanceOf(BusinessException.class);
         verify(liveKitService, never()).createRoom(anyString());
+    }
+
+    @Test
+    void create_propagatesException_whenLiveKitFails() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(host));
+        when(roomRepository.save(any(MeetingRoom.class))).thenAnswer(inv -> inv.getArgument(0));
+        doThrow(new BusinessException(ErrorCode.LIVEKIT_ROOM_CREATE_FAILED))
+                .when(liveKitService).createRoom(anyString());
+
+        assertThatThrownBy(() -> meetingRoomService.create(new MeetingRoomRequest("제목", "설명"), 1L))
+                .isInstanceOf(BusinessException.class);
     }
 
     // ---------- join ----------
@@ -205,18 +217,16 @@ class MeetingRoomServiceTest {
     // ---------- getList / getDetail ----------
 
     @Test
-    void getList_excludesEndedRooms() {
+    void getList_returnsNonEndedRooms_viaStatusNotQuery() {
         MeetingRoom active = MeetingRoom.of("A", "", host, "r1");
         ReflectionTestUtils.setField(active, "id", 1L);
-        MeetingRoom ended = MeetingRoom.of("B", "", host, "r2");
-        ReflectionTestUtils.setField(ended, "id", 2L);
-        ended.end();
-        when(roomRepository.findAll()).thenReturn(List.of(active, ended));
+        when(roomRepository.findByStatusNot(MeetingRoom.Status.ENDED)).thenReturn(List.of(active));
 
         List<MeetingRoomSummary> list = meetingRoomService.getList();
 
         assertThat(list).hasSize(1);
         assertThat(list.get(0).id()).isEqualTo(1L);
+        verify(roomRepository).findByStatusNot(MeetingRoom.Status.ENDED);
     }
 
     @Test

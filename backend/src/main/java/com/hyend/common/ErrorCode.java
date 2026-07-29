@@ -51,6 +51,7 @@ public enum ErrorCode {
     MEETING_NOT_ACTIVE(HttpStatus.CONFLICT, "진행 중인 회의가 아닙니다."),
     NOT_MEETING_HOST(HttpStatus.FORBIDDEN, "회의 개설자만 이 작업을 수행할 수 있습니다."),
     ALREADY_IN_MEETING(HttpStatus.CONFLICT, "이미 회의에 참가 중입니다."),
+    LIVEKIT_ROOM_CREATE_FAILED(HttpStatus.BAD_GATEWAY, "화상회의 서버 연동에 실패했습니다."),
     INVITE_NOT_FOUND(HttpStatus.NOT_FOUND, "초대 링크가 유효하지 않거나 만료됐습니다."),
     AI_QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI 사용 할당량을 초과했습니다."),
     MINUTES_NOT_FOUND(HttpStatus.NOT_FOUND, "회의록을 찾을 수 없습니다."),

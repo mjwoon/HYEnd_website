@@ -1,5 +1,7 @@
 package com.hyend.service;
 
+import com.hyend.common.ErrorCode;
+import com.hyend.exception.BusinessException;
 import io.livekit.server.AccessToken;
 import io.livekit.server.RoomJoin;
 import io.livekit.server.RoomName;
@@ -31,11 +33,12 @@ public class LiveKitService {
                     .createRoom(roomName)
                     .execute();
             if (!response.isSuccessful()) {
-                log.warn("LiveKit 방 생성 실패: {}", response.errorBody());
+                log.error("LiveKit 방 생성 실패: {}", response.errorBody());
+                throw new BusinessException(ErrorCode.LIVEKIT_ROOM_CREATE_FAILED);
             }
         } catch (IOException e) {
             log.error("LiveKit 방 생성 중 오류", e);
-            throw new RuntimeException("LiveKit 방 생성 실패", e);
+            throw new BusinessException(ErrorCode.LIVEKIT_ROOM_CREATE_FAILED);
         }
     }
 
