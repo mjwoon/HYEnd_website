@@ -2,7 +2,9 @@ package com.hyend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.hyend.common.ErrorCode;
 import com.hyend.dto.meeting.*;
+import com.hyend.exception.BusinessException;
 import com.hyend.exception.GlobalExceptionHandler;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.MeetingRoomService;
@@ -27,7 +29,9 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -79,12 +83,64 @@ class MeetingControllerTest {
     }
 
     @Test
+    void createMeeting_returns400_whenTitleBlank() throws Exception {
+        MeetingRoomRequest request = new MeetingRoomRequest("", "설명");
+
+        mockMvc.perform(post("/api/meetings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void getMeetings_returnsListWithSuccess() throws Exception {
         given(meetingRoomService.getList()).willReturn(List.of());
 
         mockMvc.perform(get("/api/meetings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
+    }
 
+    @Test
+    void getMeeting_returns404_whenNotFound() throws Exception {
+        given(meetingRoomService.getDetail(anyLong()))
+                .willThrow(new BusinessException(ErrorCode.MEETING_NOT_FOUND));
+
+        mockMvc.perform(get("/api/meetings/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void joinMeeting_returnsLiveKitToken() throws Exception {
+        given(meetingRoomService.join(anyLong(), anyLong()))
+                .willReturn(new JoinMeetingResponse("livekit.jwt.token", "room-uuid", 1L));
+
+        mockMvc.perform(post("/api/meetings/1/join"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.livekitToken").value("livekit.jwt.token"));
+    }
+
+    @Test
+    void leaveMeeting_returns200() throws Exception {
+        mockMvc.perform(post("/api/meetings/1/leave"))
+                .andExpect(status().isOk());
+        verify(meetingRoomService).leave(1L, 1L);
+    }
+
+    @Test
+    void endMeeting_returns403_whenNotHost() throws Exception {
+        willThrow(new BusinessException(ErrorCode.NOT_MEETING_HOST))
+                .given(meetingRoomService).end(anyLong(), anyLong());
+
+        mockMvc.perform(post("/api/meetings/1/end"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deleteMeeting_returns204() throws Exception {
+        mockMvc.perform(delete("/api/meetings/1"))
+                .andExpect(status().isNoContent());
+        verify(meetingRoomService).delete(1L, 1L);
     }
 }
