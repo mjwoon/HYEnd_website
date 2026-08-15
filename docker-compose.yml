@@ -8,6 +8,7 @@ services:
       - "55173:5173"
     environment:
       - VITE_API_URL=http://backend:8080
+      - CHOKIDAR_USEPOLLING=true
     depends_on:
       backend:
         condition: service_healthy
@@ -64,6 +65,9 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - FILE_STORAGE_TYPE=local               # local | s3
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - LIVEKIT_SERVER_URL=${LIVEKIT_URL}
     depends_on:
       db:
         condition: service_healthy

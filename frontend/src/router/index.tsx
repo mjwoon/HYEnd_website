@@ -20,10 +20,19 @@ import MyAssignmentsPage from '@/pages/my/MyAssignmentsPage';
 import MyScrapsPage from '@/pages/my/MyScrapsPage';
 import ContactPage from '@/pages/ContactPage';
 import BooksPage from '@/pages/BooksPage';
+import MeetingListPage from '@/pages/meeting/MeetingListPage';
+import MeetingDetailPage from '@/pages/meeting/MeetingDetailPage';
+import MeetingCreatePage from '@/pages/meeting/MeetingCreatePage';
+import MeetingLobbyPage from '@/pages/meeting/MeetingLobbyPage';
+import MeetingRoomPage from '@/pages/meeting/MeetingRoomPage';
+import MeetingMinutesPage from '@/pages/meeting/MeetingMinutesPage';
 
 export function AppRouter() {
   return (
     <Routes>
+      {/* 풀스크린 회의 화면 — Header/Footer 없음 */}
+      <Route path="meeting/:id/room" element={<MeetingRoomPage />} />
+
       <Route path="/" element={<RootLayout />}>
         <Route index element={<LandingPage />} />
         <Route path="about/greeting" element={<GreetingPage />} />
@@ -50,6 +59,12 @@ export function AppRouter() {
           <Route path="my/assignments" element={<MyAssignmentsPage />} />
           <Route path="my/scraps" element={<MyScrapsPage />} />
           <Route path="books" element={<BooksPage />} />
+          {/* 회의방 */}
+          <Route path="meeting" element={<MeetingListPage />} />
+          <Route path="meeting/new" element={<MeetingCreatePage />} />
+          <Route path="meeting/:id" element={<MeetingDetailPage />} />
+          <Route path="meeting/:id/lobby" element={<MeetingLobbyPage />} />
+          <Route path="meeting/:id/minutes" element={<MeetingMinutesPage />} />
         </Route>
       </Route>
     </Routes>
