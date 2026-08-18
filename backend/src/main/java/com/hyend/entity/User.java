@@ -48,4 +48,8 @@ public class User extends BaseTimeEntity {
         user.isActive = true;
         return user;
     }
+
+    public void updateRole(Role role) {
+        this.role = role;
+    }
 }

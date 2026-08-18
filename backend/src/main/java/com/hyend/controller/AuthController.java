@@ -5,8 +5,10 @@ import com.hyend.dto.auth.LoginRequest;
 import com.hyend.dto.auth.RefreshRequest;
 import com.hyend.dto.auth.RegisterRequest;
 import com.hyend.dto.auth.TokenResponse;
+import com.hyend.dto.user.UserResponse;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.AuthService;
+import com.hyend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
     @Operation(summary = "회원가입")
     @PostMapping("/register")
@@ -50,5 +53,12 @@ public class AuthController {
     public ApiResponse<Void> logout(@AuthenticationPrincipal UserPrincipal principal) {
         authService.logout(principal.getId());
         return ApiResponse.ok("로그아웃 되었습니다.");
+    }
+
+    @Operation(summary = "내 정보 조회", description = "현재 로그인된 사용자 정보를 반환합니다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/me")
+    public ApiResponse<UserResponse> me(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(userService.getMe(principal.getId()));
     }
 }

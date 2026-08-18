@@ -6,10 +6,6 @@ public record BookResponse(
         Long bookId,
         String title,
         String author,
-        String category,
-        String summary,
-        String imageUrl,
         boolean isAvailable
-)
- {
+) {
 }

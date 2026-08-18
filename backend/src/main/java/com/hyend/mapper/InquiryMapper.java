@@ -1,8 +1,6 @@
 package com.hyend.mapper;
 
-import com.hyend.dto.inquiry.InquiryRequest;
 import com.hyend.dto.inquiry.InquiryResponse;
-import com.hyend.dto.inquiry.ReplyRequest;
 import com.hyend.dto.inquiry.ReplyResponse;
 import com.hyend.entity.Inquiry;
 import com.hyend.entity.InquiryReply;

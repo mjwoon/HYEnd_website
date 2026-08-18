@@ -4,6 +4,7 @@ public record InquiryResponse(
         Long inquiryId,
         String title,
         String content,
-        String category
+        String author,
+        String status
 ) {
 }

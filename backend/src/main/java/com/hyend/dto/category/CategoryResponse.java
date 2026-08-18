@@ -2,6 +2,7 @@ package com.hyend.dto.category;
 
 public record CategoryResponse(
         Long categoryId,
-        String name
+        String name,
+        String description
 ) {
 }

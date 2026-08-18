@@ -2,7 +2,6 @@ package com.hyend.service;
 
 import com.hyend.common.ErrorCode;
 import com.hyend.dto.auth.*;
-import com.hyend.entity.RefreshToken;
 import com.hyend.entity.User;
 import com.hyend.exception.BusinessException;
 import com.hyend.repository.RefreshTokenRepository;
@@ -20,7 +19,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -81,8 +79,6 @@ class AuthServiceTest {
         given(jwtTokenProvider.createRefreshToken(1L, "test@test.com", "STUDENT")).willReturn("refresh-token");
         given(jwtTokenProvider.getAccessTokenExpiryMs()).willReturn(15 * 60 * 1000L);
         given(jwtTokenProvider.getRefreshTokenExpiryMs()).willReturn(7 * 24 * 60 * 60 * 1000L);
-        given(userRepository.getReferenceById(1L))
-                .willReturn(User.of("test@test.com", "encoded", "홍길동", User.Role.STUDENT));
 
         TokenResponse result = authService.login(req);
 
@@ -90,6 +86,7 @@ class AuthServiceTest {
         assertThat(result.refreshToken()).isEqualTo("refresh-token");
         assertThat(result.tokenType()).isEqualTo("Bearer");
         assertThat(result.expiresIn()).isEqualTo(900L); // 15분 = 900초
+        then(refreshTokenRepository).should().save("refresh-token", 1L, 7 * 24 * 60 * 60 * 1000L);
     }
 
     @Test
@@ -110,7 +107,8 @@ class AuthServiceTest {
     @Test
     @DisplayName("토큰 재발급 - 리프레시 토큰 없음")
     void refresh_tokenNotFound() {
-        given(refreshTokenRepository.findByToken("no-such-token")).willReturn(Optional.empty());
+        given(refreshTokenRepository.findGracePeriod("no-such-token")).willReturn(Optional.empty());
+        given(refreshTokenRepository.findUserIdByToken("no-such-token")).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> authService.refresh(new RefreshRequest("no-such-token")))
                 .isInstanceOf(BusinessException.class)
@@ -121,15 +119,14 @@ class AuthServiceTest {
     @Test
     @DisplayName("토큰 재발급 - 만료된 리프레시 토큰")
     void refresh_expiredToken() {
-        RefreshToken stored = mock(RefreshToken.class);
-        given(stored.getExpiresAt()).willReturn(LocalDateTime.now().minusSeconds(1));
-        given(refreshTokenRepository.findByToken("expired")).willReturn(Optional.of(stored));
+        given(refreshTokenRepository.findGracePeriod("expired")).willReturn(Optional.empty());
+        willThrow(new BusinessException(ErrorCode.EXPIRED_TOKEN))
+                .given(jwtTokenProvider).parseClaims("expired");
 
         assertThatThrownBy(() -> authService.refresh(new RefreshRequest("expired")))
                 .isInstanceOf(BusinessException.class)
                 .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                         .isEqualTo(ErrorCode.EXPIRED_TOKEN));
-        then(refreshTokenRepository).should().delete(stored);
     }
 
     @Test
@@ -140,22 +137,36 @@ class AuthServiceTest {
         given(user.getEmail()).willReturn("test@test.com");
         given(user.getRole()).willReturn(User.Role.STUDENT);
 
-        RefreshToken stored = mock(RefreshToken.class);
-        given(stored.getExpiresAt()).willReturn(LocalDateTime.now().plusDays(1));
-        given(stored.getUser()).willReturn(user);
-        given(refreshTokenRepository.findByToken("valid-refresh")).willReturn(Optional.of(stored));
+        given(refreshTokenRepository.findGracePeriod("valid-refresh")).willReturn(Optional.empty());
+        given(refreshTokenRepository.findUserIdByToken("valid-refresh")).willReturn(Optional.of(1L));
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
         given(jwtTokenProvider.createAccessToken(1L, "test@test.com", "STUDENT")).willReturn("new-access");
         given(jwtTokenProvider.createRefreshToken(1L, "test@test.com", "STUDENT")).willReturn("new-refresh");
         given(jwtTokenProvider.getAccessTokenExpiryMs()).willReturn(15 * 60 * 1000L);
         given(jwtTokenProvider.getRefreshTokenExpiryMs()).willReturn(7 * 24 * 60 * 60 * 1000L);
-        given(userRepository.getReferenceById(1L)).willReturn(user);
 
         TokenResponse result = authService.refresh(new RefreshRequest("valid-refresh"));
 
         assertThat(result.accessToken()).isEqualTo("new-access");
         assertThat(result.refreshToken()).isEqualTo("new-refresh");
-        then(refreshTokenRepository).should().delete(stored);
+        then(refreshTokenRepository).should().delete("valid-refresh");
+        then(refreshTokenRepository).should().save("new-refresh", 1L, 7 * 24 * 60 * 60 * 1000L);
+        then(refreshTokenRepository).should().saveGracePeriod(eq("valid-refresh"), any(TokenResponse.class), eq(10000L));
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 - Grace Period 캐시 히트")
+    void refresh_gracePeriodHit() {
+        TokenResponse cached = TokenResponse.of("cached-access", "cached-refresh", 900000L);
+        given(refreshTokenRepository.findGracePeriod("valid-refresh")).willReturn(Optional.of(cached));
+
+        TokenResponse result = authService.refresh(new RefreshRequest("valid-refresh"));
+
+        assertThat(result.accessToken()).isEqualTo("cached-access");
+        assertThat(result.refreshToken()).isEqualTo("cached-refresh");
+        then(jwtTokenProvider).should(never()).parseClaims(anyString());
+        then(refreshTokenRepository).should(never()).findUserIdByToken(anyString());
     }
 
     // ─── logout ───────────────────────────────────────────────────────────
