@@ -1,5 +1,7 @@
 package com.hyend.entity;
 
+import com.hyend.common.ErrorCode;
+import com.hyend.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
