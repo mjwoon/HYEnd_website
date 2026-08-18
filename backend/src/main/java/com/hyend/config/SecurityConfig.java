@@ -50,6 +50,9 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .requestMatchers("/error").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/invite/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/push/vapid-public-key").permitAll()
+                .requestMatchers("/ws/**").permitAll()
 
                 // ADMIN 전용
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

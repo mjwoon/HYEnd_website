@@ -32,6 +32,7 @@ public class AnnouncementService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final AttachmentService attachmentService;
+    private final WebPushService webPushService;
 
     @Cacheable(value = "announcements", key = "'list:' + #pageable.pageNumber + ':' + #pageable.pageSize")
     public Page<AnnouncementSummary> getList(Pageable pageable) {
@@ -72,7 +73,13 @@ public class AnnouncementService {
         if (request.isImportant()) {
             announcement.pin();
         }
-        return toResponse(announcementRepository.save(announcement));
+        Announcement saved = announcementRepository.save(announcement);
+        webPushService.broadcastToAll(
+                "새 공지사항",
+                saved.getTitle(),
+                "/announcements/" + saved.getId()
+        );
+        return toResponse(saved);
     }
 
     @Transactional

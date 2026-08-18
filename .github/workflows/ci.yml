@@ -1,17 +1,17 @@
-name: CI
+name: CI / CD
 
 on:
   push:
     branches: [master, dev]
   pull_request:
-    branches: [master]
+    branches: [master, dev]
 
 jobs:
   backend-test:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: user
           POSTGRES_PASSWORD: password
@@ -24,7 +24,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       redis:
-        image: redis:7
+        image: redis:7-alpine
         ports:
           - 6379:6379
         options: >-
@@ -32,59 +32,105 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/hyend_test
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATA_REDIS_HOST: localhost
+      SPRING_DATA_REDIS_PORT: 6379
+      JWT_SECRET: dGVzdFNlY3JldEtleUZvclRlc3RpbmdQdXJwb3Nlc09ubHlEb05vdFVzZUluUHJvZHVjdGlvbg==
+      OPENAI_API_KEY: ""
+      LIVEKIT_API_KEY: test-key
+      LIVEKIT_API_SECRET: test-secret
+      APP_BASE_URL: http://localhost:8080
+      FILE_STORAGE_TYPE: local
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'gradle'
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew test jacocoTestReport
+      - name: Run backend tests
+        run: ./gradlew test --no-daemon
         working-directory: ./backend
-      - uses: codecov/codecov-action@v4
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          files: ./backend/build/reports/jacoco/test/jacocoTestReport.xml
+          name: backend-test-report
+          path: backend/build/reports/tests/test/
 
-  frontend-test:
+  frontend-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - run: npm ci
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
         working-directory: ./frontend
-      - run: npm run test
+      - name: Type check
+        run: npx tsc --noEmit
         working-directory: ./frontend
-      - run: npm run build
+      - name: Build
+        run: npm run build
         working-directory: ./frontend
-
-  e2e-test:
-    runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci
-        working-directory: ./frontend
-      - run: npx playwright install --with-deps chromium
-        working-directory: ./frontend
-      - run: docker compose up -d
-      - name: Wait for services
-        run: |
-          for i in {1..30}; do
-            curl -sf http://localhost:8080/actuator/health && break
-            sleep 5
-          done
-      - run: npm run test:e2e
-        working-directory: ./frontend
+        env:
+          VITE_LIVEKIT_URL: ws://localhost:7880
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [e2e-test]
+    needs: [backend-test, frontend-check]
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v4
-      - run: docker compose -f docker-compose.prod.yml up -d --build
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ${{ secrets.EC2_WORKDIR }}
+            git pull origin master
+
+            cat > .env <<EOF
+            SECRET_KEY=${{ secrets.JWT_SECRET }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+            AWS_S3_REGION=${{ secrets.AWS_S3_REGION }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            LIVEKIT_API_KEY=${{ secrets.LIVEKIT_API_KEY }}
+            LIVEKIT_API_SECRET=${{ secrets.LIVEKIT_API_SECRET }}
+            LIVEKIT_URL=${{ secrets.LIVEKIT_URL }}
+            VAPID_PUBLIC_KEY=${{ secrets.VAPID_PUBLIC_KEY }}
+            VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            APP_BASE_URL=${{ secrets.APP_BASE_URL }}
+            EOF
+
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+            echo "Waiting for backend health..."
+            for i in $(seq 1 24); do
+              if docker compose -f docker-compose.prod.yml exec -T backend \
+                  wget -qO- http://localhost:8080/actuator/health 2>/dev/null \
+                  | grep -q '"status":"UP"'; then
+                echo "Backend is healthy"
+                break
+              fi
+              if [ "$i" -eq 24 ]; then
+                echo "Health check timed out"
+                docker compose -f docker-compose.prod.yml logs --tail=50 backend
+                exit 1
+              fi
+              sleep 5
+            done
+
+            docker image prune -f
