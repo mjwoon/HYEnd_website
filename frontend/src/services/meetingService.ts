@@ -1,6 +1,8 @@
 import apiClient from '@/services/apiClient';
 import type {
+  ChatMessage,
   CreateMeetingRequest,
+  InviteResponse,
   JoinMeetingResponse,
   MeetingRoomDetail,
   MeetingRoomSummary,
@@ -29,4 +31,19 @@ export const meetingService = {
 
   remove: (id: number) =>
     apiClient.delete<ApiResponse<void>>(`/meetings/${id}`),
+
+  createInvite: (id: number, expiresInHours: number) =>
+    apiClient.post<ApiResponse<InviteResponse>>(`/meetings/${id}/invite`, { expiresInHours }),
+
+  resolveInvite: (token: string) =>
+    apiClient.get<ApiResponse<number>>(`/invite/${token}`),
+
+  getChatHistory: (id: number) =>
+    apiClient.get<ApiResponse<ChatMessage[]>>(`/meetings/${id}/chat`),
+
+  getMinutes: (id: number) =>
+    apiClient.get<ApiResponse<{ roomId: number; content: string; generatedAt: string }>>(`/meetings/${id}/minutes`),
+
+  generateMinutes: (id: number) =>
+    apiClient.post<ApiResponse<{ roomId: number; content: string; generatedAt: string }>>(`/meetings/${id}/minutes`),
 };

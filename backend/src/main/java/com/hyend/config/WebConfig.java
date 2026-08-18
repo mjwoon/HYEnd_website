@@ -11,9 +11,12 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOrigins(
-                        "http://localhost:5173",  // 로컬 프론트엔드
-                        "http://localhost:55173", // Docker 프론트엔드
-                        "http://localhost:5174"   // Admin
+                        "http://localhost:5173",
+                        "http://localhost:55173",
+                        "http://localhost:5174",
+                        "http://13.209.76.52",
+                        "http://13.209.76.52:55173",
+                        "http://13.209.76.52:5174"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")

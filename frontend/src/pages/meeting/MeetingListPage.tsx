@@ -8,17 +8,30 @@ import type { MeetingRoomSummary, MeetingStatus } from '@/types/meeting';
 type Filter = 'ALL' | MeetingStatus;
 
 const STATUS_LABEL: Record<MeetingStatus, string> = {
-  WAITING: '대기중',
+  WAITING: '예정',
   ACTIVE: '진행중',
   ENDED: '종료',
+};
+
+const STATUS_COLOR: Record<MeetingStatus, { bg: string; text: string }> = {
+  ACTIVE:  { bg: '#5FFB7A', text: '#000' },
+  WAITING: { bg: '#3B82F6', text: '#fff' },
+  ENDED:   { bg: '#374151', text: '#9CA3AF' },
 };
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ko-KR', {
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit',
-  });
+  }).replace(/\. /g, '.').replace(/\.$/, '');
 }
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: 'ALL', label: '전체' },
+  { key: 'ACTIVE', label: '진행중' },
+  { key: 'WAITING', label: '예정' },
+  { key: 'ENDED', label: '종료' },
+];
 
 export default function MeetingListPage() {
   const navigate = useNavigate();
@@ -38,85 +51,183 @@ export default function MeetingListPage() {
   const filtered = filter === 'ALL' ? list : list.filter((m) => m.status === filter);
 
   return (
-    <Container>
-      <Header>
-        <Title>회의방</Title>
-        <CreateButton onClick={() => navigate('/meeting/new')}>회의방 만들기 +</CreateButton>
-      </Header>
+    <Page>
+      <BgCircles />
 
-      <FilterRow>
-        {(['ALL', 'ACTIVE', 'WAITING', 'ENDED'] as Filter[]).map((f) => (
-          <FilterBtn key={f} $active={filter === f} onClick={() => setFilter(f)}>
-            {f === 'ALL' ? '전체' : STATUS_LABEL[f as MeetingStatus]}
-          </FilterBtn>
-        ))}
-      </FilterRow>
+      <Content>
+        <TopSection>
+          <div>
+            <PageTitle>회의방</PageTitle>
+            <PageSub>온라인 회의 공간입니다</PageSub>
+          </div>
+        </TopSection>
 
-      {error && <ErrorMsg>{error}</ErrorMsg>}
+        <ToolRow>
+          <FilterRow>
+            {FILTERS.map(({ key, label }) => (
+              <FilterBtn key={key} $active={filter === key} onClick={() => setFilter(key)}>
+                {label}
+              </FilterBtn>
+            ))}
+          </FilterRow>
+          <CreateBtn onClick={() => navigate('/meeting/new')}>회의방 만들기 +</CreateBtn>
+        </ToolRow>
 
-      {loading ? (
-        <EmptyState>불러오는 중...</EmptyState>
-      ) : filtered.length === 0 ? (
-        <EmptyState>
-          <EmptyIcon>📋</EmptyIcon>
-          <p>회의방이 없습니다.</p>
-          <CreateButton onClick={() => navigate('/meeting/new')}>첫 회의방 만들기 →</CreateButton>
-        </EmptyState>
-      ) : (
-        <Grid>
-          {filtered.map((room, i) => (
-            <Card
-              key={room.id}
-              onClick={() => navigate(`/meeting/${room.id}`)}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: i * 0.04 }}
-            >
-              <CardTop>
-                <StatusBadge $status={room.status}>
-                  {room.status === 'ACTIVE' && <LiveDot />}
-                  {STATUS_LABEL[room.status]}
-                </StatusBadge>
-              </CardTop>
-              <RoomTitle>{room.title}</RoomTitle>
-              <Meta>주최자 · {room.hostName}</Meta>
-              <Meta>{formatDate(room.createdAt)}</Meta>
-              <CardFooter>
-                <JoinBtn $status={room.status}>
-                  {room.status === 'ACTIVE' ? '참여하기 →'
-                    : room.status === 'WAITING' ? '상세 보기 →'
-                    : '회의록 보기 →'}
-                </JoinBtn>
-              </CardFooter>
-            </Card>
-          ))}
-        </Grid>
-      )}
-    </Container>
+        {error && <ErrorMsg>{error}</ErrorMsg>}
+
+        {loading ? (
+          <EmptyBox><EmptyText>불러오는 중...</EmptyText></EmptyBox>
+        ) : filtered.length === 0 ? (
+          <EmptyBox>
+            <EmptyIcon>
+              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                <rect x="8" y="16" width="48" height="36" rx="4" stroke="#4B5563" strokeWidth="2"/>
+                <circle cx="22" cy="38" r="5" stroke="#4B5563" strokeWidth="2"/>
+                <circle cx="32" cy="38" r="5" stroke="#4B5563" strokeWidth="2"/>
+                <circle cx="42" cy="38" r="5" stroke="#4B5563" strokeWidth="2"/>
+                <path d="M20 28h24" stroke="#4B5563" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </EmptyIcon>
+            <EmptyTitle>아직 개설된 회의방이 없습니다</EmptyTitle>
+            <EmptyDesc>새 회의방을 만들어 팀원들과 온라인으로 소통하세요</EmptyDesc>
+            <EmptyDesc style={{ marginTop: 4 }}>회의방을 만들면 팀원들에게 자동으로 알림이 발송됩니다</EmptyDesc>
+          </EmptyBox>
+        ) : (
+          <TableWrap>
+            <Table>
+              <thead>
+                <Tr $header>
+                  <Th style={{ width: '34%' }}>회의방 이름</Th>
+                  <Th style={{ width: '14%' }}>주최자</Th>
+                  <Th style={{ width: '12%', textAlign: 'center' }}>참여 현황</Th>
+                  <Th style={{ width: '10%', textAlign: 'center' }}>상태</Th>
+                  <Th style={{ width: '18%' }}>시작 시간</Th>
+                  <Th style={{ width: '12%' }} />
+                </Tr>
+              </thead>
+              <tbody>
+                {filtered.map((room, i) => (
+                  <motion.tr
+                    key={room.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.03 }}
+                    onClick={() => navigate(`/meeting/${room.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <Td $muted={room.status === 'ENDED'}>
+                      <RoomName $ended={room.status === 'ENDED'}>{room.title}</RoomName>
+                    </Td>
+                    <Td $muted={room.status === 'ENDED'}>{room.hostName}</Td>
+                    <Td $muted={room.status === 'ENDED'} style={{ textAlign: 'center' }}>—</Td>
+                    <Td style={{ textAlign: 'center' }}>
+                      <Badge $status={room.status}>{STATUS_LABEL[room.status]}</Badge>
+                    </Td>
+                    <Td $muted={room.status === 'ENDED'}>{formatDate(room.createdAt)}</Td>
+                    <Td>
+                      {room.status !== 'ENDED' && (
+                        <JoinBtn
+                          onClick={(e) => { e.stopPropagation(); navigate(`/meeting/${room.id}`); }}
+                        >
+                          참여
+                        </JoinBtn>
+                      )}
+                    </Td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableWrap>
+        )}
+      </Content>
+    </Page>
   );
 }
 
-const Container = styled.div`
-  padding: 100px 40px 60px;
-  max-width: 1200px;
-  margin: 0 auto;
+/* ── Styled Components ── */
+
+const Page = styled.div`
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
 `;
 
-const Header = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+const BgCircles = styled.div`
+  position: absolute;
+  right: -80px;
+  top: 50px;
+  width: 900px;
+  height: 900px;
+  pointer-events: none;
+  z-index: 0;
+  &::before, &::after, & > span {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  &::before {
+    inset: 100px;
+  }
+  &::after {
+    inset: 0;
+  }
+`;
+
+const Content = styled.div`
+  position: relative;
+  z-index: 1;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 120px 160px 80px;
+`;
+
+const TopSection = styled.div`
   margin-bottom: 28px;
 `;
 
-const Title = styled.h1`
+const PageTitle = styled.h1`
   font-size: ${({ theme }) => theme.typography.fontSize.semiTitle};
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
   color: ${({ theme }) => theme.colors.text.primary};
+  margin-bottom: 6px;
 `;
 
-const CreateButton = styled.button`
+const PageSub = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+const ToolRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+`;
+
+const FilterRow = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const FilterBtn = styled.button<{ $active: boolean }>`
+  padding: 6px 18px;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px solid ${({ $active, theme }) =>
+    $active ? theme.colors.neonGreen : theme.colors.border};
+  background: transparent;
+  color: ${({ $active, theme }) =>
+    $active ? theme.colors.neonGreen : theme.colors.text.secondary};
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  font-weight: ${({ $active, theme }) =>
+    $active ? theme.typography.fontWeight.bold : theme.typography.fontWeight.medium};
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover { border-color: ${({ theme }) => theme.colors.neonGreen}; }
+`;
+
+const CreateBtn = styled.button`
   background: ${({ theme }) => theme.colors.neonGreen};
   color: #000;
   border: none;
@@ -130,135 +241,97 @@ const CreateButton = styled.button`
   &:hover { opacity: 0.85; }
 `;
 
-const FilterRow = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-`;
-
-const FilterBtn = styled.button<{ $active: boolean }>`
-  padding: 6px 16px;
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  border: 1px solid ${({ $active, theme }) =>
-    $active ? theme.colors.neonGreen : theme.colors.border};
-  background: ${({ $active, theme }) =>
-    $active ? theme.colors.neonGreen : 'transparent'};
-  color: ${({ $active }) => $active ? '#000' : '#9CA3AF'};
-  font-size: ${({ theme }) => theme.typography.fontSize.body};
-  font-weight: ${({ $active, theme }) =>
-    $active ? theme.typography.fontWeight.bold : theme.typography.fontWeight.medium};
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s;
-  &:hover { border-color: ${({ theme }) => theme.colors.neonGreen}; }
-`;
-
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const Card = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.02);
+const TableWrap = styled.div`
+  width: 100%;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
-  padding: 20px;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-  backdrop-filter: blur(7px);
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.neonGreen};
-    background: rgba(95, 251, 122, 0.03);
-  }
+  overflow: hidden;
 `;
 
-const CardTop = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
 `;
 
-const StatusBadge = styled.span<{ $status: MeetingStatus }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+const Tr = styled.tr<{ $header?: boolean }>`
+  background: ${({ $header }) => $header ? 'rgba(255,255,255,0.03)' : 'transparent'};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  &:last-child { border-bottom: none; }
+  &:not(:first-child):hover { background: rgba(255,255,255,0.02); }
+`;
+
+const Th = styled.th`
+  padding: 14px 20px;
+  text-align: left;
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.neonGreen};
+`;
+
+const Td = styled.td<{ $muted?: boolean }>`
+  padding: 16px 20px;
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  color: ${({ $muted, theme }) => $muted ? theme.colors.text.secondary : theme.colors.text.primary};
+  vertical-align: middle;
+`;
+
+const RoomName = styled.span<{ $ended: boolean }>`
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ $ended, theme }) => $ended ? theme.colors.text.secondary : theme.colors.text.primary};
+`;
+
+const Badge = styled.span<{ $status: MeetingStatus }>`
+  display: inline-block;
   padding: 3px 10px;
   border-radius: ${({ theme }) => theme.borderRadius.full};
   font-size: ${({ theme }) => theme.typography.fontSize.bodyMin};
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  background: ${({ $status }) =>
-    $status === 'ACTIVE' ? 'rgba(95,251,122,0.15)'
-    : $status === 'WAITING' ? 'rgba(255,170,0,0.15)'
-    : 'rgba(156,163,175,0.15)'};
-  color: ${({ $status }) =>
-    $status === 'ACTIVE' ? '#5FFB7A'
-    : $status === 'WAITING' ? '#FFAA00'
-    : '#9CA3AF'};
+  background: ${({ $status }) => STATUS_COLOR[$status].bg};
+  color: ${({ $status }) => STATUS_COLOR[$status].text};
 `;
 
-const LiveDot = styled.span`
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #5FFB7A;
-  animation: pulse 1.5s ease-in-out infinite;
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+const JoinBtn = styled.button`
+  padding: 6px 18px;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.neonGreen};
+    color: ${({ theme }) => theme.colors.neonGreen};
   }
 `;
 
-const RoomTitle = styled.h3`
-  font-size: ${({ theme }) => theme.typography.fontSize.bodyMax};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-bottom: 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const Meta = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.bodyMin};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  margin-bottom: 4px;
-`;
-
-const CardFooter = styled.div`
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-end;
-`;
-
-const JoinBtn = styled.span<{ $status: MeetingStatus }>`
-  font-size: ${({ theme }) => theme.typography.fontSize.body};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  color: ${({ $status }) =>
-    $status === 'ACTIVE' ? '#5FFB7A'
-    : $status === 'WAITING' ? '#FFAA00'
-    : '#9CA3AF'};
-`;
-
-const EmptyState = styled.div`
+const EmptyBox = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 80px 0;
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: ${({ theme }) => theme.typography.fontSize.bodyMax};
+  justify-content: center;
+  padding: 100px 0;
+  gap: 12px;
 `;
 
-const EmptyIcon = styled.span`font-size: 48px;`;
+const EmptyIcon = styled.div`margin-bottom: 8px;`;
+
+const EmptyTitle = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.bodyMax};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+const EmptyDesc = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+const EmptyText = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
 
 const ErrorMsg = styled.p`
   color: ${({ theme }) => theme.colors.error};

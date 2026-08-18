@@ -26,12 +26,15 @@ import MeetingCreatePage from '@/pages/meeting/MeetingCreatePage';
 import MeetingLobbyPage from '@/pages/meeting/MeetingLobbyPage';
 import MeetingRoomPage from '@/pages/meeting/MeetingRoomPage';
 import MeetingMinutesPage from '@/pages/meeting/MeetingMinutesPage';
+import InviteRedirectPage from '@/pages/meeting/InviteRedirectPage';
 
 export function AppRouter() {
   return (
     <Routes>
       {/* 풀스크린 회의 화면 — Header/Footer 없음 */}
       <Route path="meeting/:id/room" element={<MeetingRoomPage />} />
+      {/* 초대 링크 리다이렉트 — 공개 라우트 (RootLayout 안에서 처리) */}
+      <Route path="invite/:token" element={<InviteRedirectPage />} />
 
       <Route path="/" element={<RootLayout />}>
         <Route index element={<LandingPage />} />

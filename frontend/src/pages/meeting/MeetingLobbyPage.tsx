@@ -1,10 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { motion } from 'motion/react';
 import { createLocalVideoTrack, createLocalAudioTrack } from 'livekit-client';
 import type { LocalVideoTrack, LocalAudioTrack } from 'livekit-client';
 import { meetingService } from '@/services/meetingService';
+import type { MeetingRoomDetail, MeetingStatus } from '@/types/meeting';
+
+const STATUS_LABEL: Record<MeetingStatus, string> = {
+  WAITING: '예정',
+  ACTIVE: '진행중',
+  ENDED: '종료',
+};
+
+const STATUS_COLOR: Record<MeetingStatus, { bg: string; text: string }> = {
+  ACTIVE:  { bg: '#5FFB7A', text: '#000' },
+  WAITING: { bg: '#3B82F6', text: '#fff' },
+  ENDED:   { bg: '#374151', text: '#9CA3AF' },
+};
 
 export default function MeetingLobbyPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,16 +27,16 @@ export default function MeetingLobbyPage() {
   const videoTrackRef = useRef<LocalVideoTrack | null>(null);
   const audioTrackRef = useRef<LocalAudioTrack | null>(null);
 
-  const [isCamOn, setIsCamOn] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
+  const [isCamOn, setIsCamOn] = useState(true);
   const [camReady, setCamReady] = useState(false);
+
   const [token, setToken] = useState('');
   const [roomName, setRoomName] = useState('');
-  const [roomTitle, setRoomTitle] = useState('');
+  const [detail, setDetail] = useState<MeetingRoomDetail | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
   const [tokenError, setTokenError] = useState('');
 
-  // Fetch join token
   useEffect(() => {
     setTokenLoading(true);
     meetingService.join(roomId)
@@ -32,15 +44,14 @@ export default function MeetingLobbyPage() {
         setToken(res.data.data.livekitToken);
         setRoomName(res.data.data.roomName);
       })
-      .catch(() => setTokenError('입장 토큰을 받아오지 못했습니다. 다시 시도해주세요.'))
+      .catch(() => setTokenError('입장 토큰을 받아오지 못했습니다.'))
       .finally(() => setTokenLoading(false));
 
     meetingService.getDetail(roomId)
-      .then((res) => setRoomTitle(res.data.data.title))
+      .then((res) => setDetail(res.data.data))
       .catch(() => {});
   }, [roomId]);
 
-  // Local camera preview
   useEffect(() => {
     let track: LocalVideoTrack;
     createLocalVideoTrack({ resolution: { width: 640, height: 360 } })
@@ -50,49 +61,33 @@ export default function MeetingLobbyPage() {
         if (videoRef.current) t.attach(videoRef.current);
         setCamReady(true);
       })
-      .catch(() => {
-        setIsCamOn(false);
-        setCamReady(true);
-      });
+      .catch(() => { setIsCamOn(false); setCamReady(true); });
     return () => { track?.stop(); };
   }, []);
 
-  // Local audio (muted in lobby — only to test mic permission)
   useEffect(() => {
     let track: LocalAudioTrack;
     createLocalAudioTrack()
-      .then((t) => {
-        track = t;
-        audioTrackRef.current = t;
-      })
+      .then((t) => { track = t; audioTrackRef.current = t; })
       .catch(() => setIsMicOn(false));
     return () => { track?.stop(); };
   }, []);
 
-  const toggleCam = async () => {
-    const track = videoTrackRef.current;
-    if (!track) return;
-    if (isCamOn) {
-      await track.mute();
-    } else {
-      await track.unmute();
-    }
-    setIsCamOn((v) => !v);
-  };
-
   const toggleMic = async () => {
-    const track = audioTrackRef.current;
-    if (!track) return;
-    if (isMicOn) {
-      await track.mute();
-    } else {
-      await track.unmute();
-    }
+    const t = audioTrackRef.current;
+    if (!t) return;
+    if (isMicOn) await t.mute(); else await t.unmute();
     setIsMicOn((v) => !v);
   };
 
+  const toggleCam = async () => {
+    const t = videoTrackRef.current;
+    if (!t) return;
+    if (isCamOn) await t.mute(); else await t.unmute();
+    setIsCamOn((v) => !v);
+  };
+
   const handleEnter = () => {
-    // Stop preview tracks — LiveKit Room will create its own
     videoTrackRef.current?.stop();
     audioTrackRef.current?.stop();
     navigate(`/meeting/${roomId}/room`, {
@@ -103,62 +98,133 @@ export default function MeetingLobbyPage() {
   const isReady = !tokenLoading && !!token && camReady;
 
   return (
-    <Outer>
-      <BackBtn onClick={() => navigate(`/meeting/${roomId}`)}>← 돌아가기</BackBtn>
+    <Page>
+      <BgCircle $size={900} $right={-80} $top={50} />
+      <BgCircle $size={694} $right={103} $top={153} />
+      <BgCircle $size={503} $right={198} $top={248} />
 
-      <Inner
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-      >
-        <RoomName>{roomTitle || '회의 대기실'}</RoomName>
-        <SubText>입장 전 카메라와 마이크를 확인하세요.</SubText>
+      <Content>
+        <BackBtn onClick={() => navigate(`/meeting/${roomId}`)}>
+          ← {detail?.title ?? '회의방'}
+        </BackBtn>
 
-        <PreviewBox>
-          <Video ref={videoRef} autoPlay playsInline muted $hidden={!isCamOn} />
-          {!isCamOn && (
-            <CamOff>
-              <CamOffIcon>📷</CamOffIcon>
-              <span>카메라 꺼짐</span>
-            </CamOff>
-          )}
-        </PreviewBox>
+        <Columns>
+          {/* ── Left: camera preview ── */}
+          <Left>
+            <LeftCard>
+              <CardTitle>내 화면 미리보기</CardTitle>
 
-        <Controls>
-          <ControlBtn $active={isMicOn} onClick={toggleMic} title={isMicOn ? '마이크 끄기' : '마이크 켜기'}>
-            <BtnIcon>{isMicOn ? '🎤' : '🔇'}</BtnIcon>
-            <BtnLabel>{isMicOn ? '마이크 ON' : '마이크 OFF'}</BtnLabel>
-          </ControlBtn>
-          <ControlBtn $active={isCamOn} onClick={toggleCam} title={isCamOn ? '카메라 끄기' : '카메라 켜기'}>
-            <BtnIcon>{isCamOn ? '📷' : '🚫'}</BtnIcon>
-            <BtnLabel>{isCamOn ? '카메라 ON' : '카메라 OFF'}</BtnLabel>
-          </ControlBtn>
-        </Controls>
+              <VideoBox>
+                <StyledVideo ref={videoRef} autoPlay playsInline muted $hidden={!isCamOn} />
+                {!isCamOn && (
+                  <VideoPlaceholder>
+                    <PlaceholderCircle />
+                    <PlaceholderText>카메라 연결 중...</PlaceholderText>
+                  </VideoPlaceholder>
+                )}
+              </VideoBox>
 
-        {tokenError && <ErrorMsg>{tokenError}</ErrorMsg>}
+              <SettingLabel>참여 설정</SettingLabel>
+              <ToggleRow>
+                <DeviceBtn $active={isMicOn} onClick={toggleMic}>
+                  마이크 {isMicOn ? '켜짐' : '꺼짐'}
+                </DeviceBtn>
+                <DeviceBtn $active={isCamOn} onClick={toggleCam}>
+                  카메라 {isCamOn ? '켜짐' : '꺼짐'}
+                </DeviceBtn>
+                <DeviceBtn $active={false} disabled>
+                  스피커 꺼짐
+                </DeviceBtn>
+              </ToggleRow>
 
-        <EnterBtn
-          onClick={handleEnter}
-          disabled={!isReady}
-        >
-          {tokenLoading ? '준비 중...' : isReady ? '입장하기 →' : '장치 초기화 중...'}
-        </EnterBtn>
-      </Inner>
-    </Outer>
+              <SettingLink>오디오 · 비디오 설정 변경 →</SettingLink>
+            </LeftCard>
+          </Left>
+
+          {/* ── Right: info + enter ── */}
+          <Right>
+            {/* 회의 정보 */}
+            <Panel>
+              <PanelTitle>회의 정보</PanelTitle>
+              {detail ? (
+                <InfoGrid>
+                  <InfoLabel>회의명</InfoLabel>
+                  <InfoVal style={{ fontWeight: 700 }}>{detail.title}</InfoVal>
+                  <InfoLabel>주최자</InfoLabel>
+                  <InfoVal>{detail.hostName}</InfoVal>
+                  <InfoLabel>시작 시간</InfoLabel>
+                  <InfoVal>
+                    {new Date(detail.createdAt).toLocaleDateString('ko-KR', {
+                      year: 'numeric', month: '2-digit', day: '2-digit',
+                      hour: '2-digit', minute: '2-digit',
+                    })}
+                  </InfoVal>
+                  <InfoLabel>현재 참여자</InfoLabel>
+                  <InfoVal style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    —
+                    {detail.status && (
+                      <StatusBadge $status={detail.status}>
+                        {STATUS_LABEL[detail.status]}
+                      </StatusBadge>
+                    )}
+                  </InfoVal>
+                </InfoGrid>
+              ) : (
+                <InfoVal style={{ color: '#9CA3AF' }}>불러오는 중...</InfoVal>
+              )}
+            </Panel>
+
+            {/* 준비되셨나요? */}
+            <Panel>
+              <PanelTitle>준비되셨나요?</PanelTitle>
+              <PanelDesc>마이크와 카메라 상태를 확인하고 입장하세요</PanelDesc>
+              {tokenError && <ErrorMsg>{tokenError}</ErrorMsg>}
+              <EnterBtn onClick={handleEnter} disabled={!isReady}>
+                {tokenLoading ? '준비 중...' : '지금 입장하기 →'}
+              </EnterBtn>
+              <ExitBtn onClick={() => navigate(`/meeting/${roomId}`)}>나가기</ExitBtn>
+            </Panel>
+
+            {/* 안내 */}
+            <Notice>
+              💡 주최자가 회의를 시작하면 자동으로 입장됩니다
+            </Notice>
+          </Right>
+        </Columns>
+      </Content>
+    </Page>
   );
 }
 
-const Outer = styled.div`
+/* ── Styled Components ── */
+
+const Page = styled.div`
   min-height: 100vh;
-  background: ${({ theme }) => theme.colors.background};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 100px 24px 60px;
+  position: relative;
+  overflow: hidden;
+`;
+
+const BgCircle = styled.div<{ $size: number; $right: number; $top: number }>`
+  position: absolute;
+  width: ${({ $size }) => $size}px;
+  height: ${({ $size }) => $size}px;
+  right: ${({ $right }) => $right}px;
+  top: ${({ $top }) => $top}px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.06);
+  pointer-events: none;
+  z-index: 0;
+`;
+
+const Content = styled.div`
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 100px 40px 80px;
 `;
 
 const BackBtn = styled.button`
-  align-self: flex-start;
   background: none;
   border: none;
   color: ${({ theme }) => theme.colors.text.secondary};
@@ -166,120 +232,207 @@ const BackBtn = styled.button`
   font-family: inherit;
   cursor: pointer;
   padding: 0;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+  display: block;
   transition: color 0.2s;
   &:hover { color: ${({ theme }) => theme.colors.neonGreen}; }
 `;
 
-const Inner = styled(motion.div)`
-  width: 100%;
-  max-width: 640px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
+const Columns = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.desktop}) {
+    grid-template-columns: 1fr;
+  }
 `;
 
-const RoomName = styled.h1`
-  font-size: ${({ theme }) => theme.typography.fontSize.semiTitle};
+const Left = styled.div``;
+
+const LeftCard = styled.div`
+  background: rgba(255,255,255,0.02);
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 24px;
+`;
+
+const CardTitle = styled.h2`
+  font-size: ${({ theme }) => theme.typography.fontSize.bodyMax};
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
   color: ${({ theme }) => theme.colors.text.primary};
-  margin-bottom: 8px;
-  text-align: center;
+  margin-bottom: 16px;
 `;
 
-const SubText = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.body};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  margin-bottom: 28px;
-  text-align: center;
-`;
-
-const PreviewBox = styled.div`
+const VideoBox = styled.div`
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  border: 1px solid ${({ theme }) => theme.colors.border};
   background: #111;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
   overflow: hidden;
   position: relative;
   margin-bottom: 20px;
 `;
 
-const Video = styled.video<{ $hidden: boolean }>`
+const StyledVideo = styled.video<{ $hidden: boolean }>`
   width: 100%;
   height: 100%;
   object-fit: cover;
   transform: scaleX(-1);
-  display: ${({ $hidden }) => ($hidden ? 'none' : 'block')};
+  display: ${({ $hidden }) => $hidden ? 'none' : 'block'};
 `;
 
-const CamOff = styled.div`
+const VideoPlaceholder = styled.div`
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  color: ${({ theme }) => theme.colors.text.secondary};
+  gap: 12px;
+`;
+
+const PlaceholderCircle = styled.div`
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #2A2A2A;
+`;
+
+const PlaceholderText = styled.p`
   font-size: ${({ theme }) => theme.typography.fontSize.body};
+  color: ${({ theme }) => theme.colors.text.secondary};
 `;
 
-const CamOffIcon = styled.span`font-size: 36px;`;
-
-const Controls = styled.div`
-  display: flex;
-  gap: 16px;
-  margin-bottom: 28px;
+const SettingLabel = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-bottom: 10px;
 `;
 
-const ControlBtn = styled.button<{ $active: boolean }>`
+const ToggleRow = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 28px;
+  gap: 10px;
+  margin-bottom: 16px;
+`;
+
+const DeviceBtn = styled.button<{ $active: boolean }>`
+  flex: 1;
+  padding: 10px 4px;
   border-radius: ${({ theme }) => theme.borderRadius.md};
-  border: 1px solid ${({ $active, theme }) =>
-    $active ? theme.colors.border : '#EF4444'};
-  background: ${({ $active }) => $active ? 'rgba(255,255,255,0.04)' : 'rgba(239,68,68,0.1)'};
-  color: ${({ $active, theme }) => $active ? theme.colors.text.primary : '#EF4444'};
+  border: 1px solid ${({ $active }) => $active ? '#5FFB7A' : '#40423F'};
+  background: transparent;
+  color: ${({ $active }) => $active ? '#5FFB7A' : '#9CA3AF'};
+  font-size: ${({ theme }) => theme.typography.fontSize.bodyMin};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
   font-family: inherit;
-  cursor: pointer;
+  cursor: ${({ disabled }) => disabled ? 'default' : 'pointer'};
   transition: all 0.15s;
-  &:hover {
-    border-color: ${({ $active, theme }) => $active ? theme.colors.neonGreen : '#ff6b6b'};
+  &:hover:not(:disabled) {
+    border-color: ${({ $active }) => $active ? '#5FFB7A' : '#9CA3AF'};
   }
 `;
 
-const BtnIcon = styled.span`font-size: 22px;`;
-
-const BtnLabel = styled.span`
+const SettingLink = styled.span`
   font-size: ${({ theme }) => theme.typography.fontSize.bodyMin};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  cursor: pointer;
+  &:hover { color: ${({ theme }) => theme.colors.neonGreen}; }
+`;
+
+const Right = styled.div`display: flex; flex-direction: column; gap: 16px;`;
+
+const Panel = styled.div`
+  background: rgba(255,255,255,0.02);
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const PanelTitle = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSize.bodyMax};
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+const PanelDesc = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+const InfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 10px 12px;
+  align-items: center;
+`;
+
+const InfoLabel = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.bodyMin};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+const InfoVal = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+const StatusBadge = styled.span<{ $status: MeetingStatus }>`
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  font-size: 11px;
+  font-weight: 700;
+  background: ${({ $status }) => STATUS_COLOR[$status].bg};
+  color: ${({ $status }) => STATUS_COLOR[$status].text};
 `;
 
 const ErrorMsg = styled.p`
   color: ${({ theme }) => theme.colors.error};
-  font-size: ${({ theme }) => theme.typography.fontSize.body};
-  margin-bottom: 12px;
-  text-align: center;
+  font-size: ${({ theme }) => theme.typography.fontSize.bodyMin};
 `;
 
 const EnterBtn = styled.button`
   width: 100%;
-  max-width: 320px;
   background: ${({ theme }) => theme.colors.neonGreen};
   color: #000;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.md};
-  padding: 14px 0;
-  font-size: ${({ theme }) => theme.typography.fontSize.bodyMax};
+  padding: 13px;
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
   font-family: inherit;
   cursor: pointer;
   transition: opacity 0.2s;
   &:hover:not(:disabled) { opacity: 0.85; }
   &:disabled { opacity: 0.4; cursor: not-allowed; }
+`;
+
+const ExitBtn = styled.button`
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  color: ${({ theme }) => theme.colors.text.primary};
+  padding: 13px;
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: rgba(255,255,255,0.08); }
+`;
+
+const Notice = styled.div`
+  background: rgba(255,255,255,0.02);
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 16px 20px;
+  font-size: ${({ theme }) => theme.typography.fontSize.body};
+  color: ${({ theme }) => theme.colors.text.secondary};
 `;

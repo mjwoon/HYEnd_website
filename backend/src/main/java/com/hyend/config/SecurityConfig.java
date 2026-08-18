@@ -49,6 +49,9 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui", "/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/invite/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/push/vapid-public-key").permitAll()
+                .requestMatchers("/ws/**").permitAll()
 
                 // ADMIN 전용
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -30,3 +30,25 @@ export interface JoinMeetingResponse {
   roomName: string;
   roomId: number;
 }
+
+export interface InviteResponse {
+  inviteUrl: string;
+  token: string;
+  expiresAt: string;
+}
+
+export interface ChatMessage {
+  id: number;
+  userId: number;
+  senderName: string;
+  content: string;
+  type: 'TEXT';
+  createdAt: string;
+}
+
+export interface TranscriptMessage {
+  transcriptId: number;
+  chunkIndex: number;
+  text: string;
+  speakerName: string;
+}
