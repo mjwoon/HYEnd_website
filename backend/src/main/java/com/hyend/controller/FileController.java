@@ -2,13 +2,10 @@ package com.hyend.controller;
 
 import com.hyend.common.ApiResponse;
 import com.hyend.config.FileStorageConfig;
-import com.hyend.dto.file.AttachmentResponse;
 import com.hyend.dto.file.FileResponse;
-import com.hyend.entity.Attachment;
 import com.hyend.exception.BusinessException;
 import com.hyend.common.ErrorCode;
 import com.hyend.security.UserPrincipal;
-import com.hyend.service.AttachmentService;
 import com.hyend.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -34,17 +31,13 @@ public class FileController {
 
     private final FileStorageService fileStorageService;
     private final FileStorageConfig fileStorageConfig;
-    private final AttachmentService attachmentService;
 
-    @Operation(summary = "파일 업로드",
-            description = "entityType(ANNOUNCEMENT/INQUIRY/EVENT)과 entityId를 함께 전달하면 DB에 첨부파일 연결 레코드가 저장됩니다.")
+    @Operation(summary = "파일 업로드")
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<List<AttachmentResponse>> upload(
+    public ApiResponse<List<FileResponse>> upload(
             @RequestParam("files") List<MultipartFile> files,
-            @RequestParam(required = false) Attachment.EntityType entityType,
-            @RequestParam(required = false) Long entityId,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         int max = fileStorageConfig.getMaxFileCount();
@@ -53,14 +46,9 @@ public class FileController {
                     "최대 " + max + "개의 파일만 업로드할 수 있습니다.");
         }
 
-        List<AttachmentResponse> results = new ArrayList<>();
+        List<FileResponse> results = new ArrayList<>();
         for (MultipartFile file : files) {
-            FileResponse stored = fileStorageService.store(file);
-            if (entityType != null && entityId != null) {
-                results.add(attachmentService.save(stored, entityType, entityId, principal.getId()));
-            } else {
-                results.add(new AttachmentResponse(null, stored.originalFilename(), stored.fileUrl(), stored.size(), stored.contentType()));
-            }
+            results.add(fileStorageService.store(file));
         }
         return ApiResponse.ok("파일이 업로드되었습니다.", results);
     }

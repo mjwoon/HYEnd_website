@@ -1,5 +1,7 @@
 package com.hyend.dto.book;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record BookResponse(
         Long bookId,
         String title,

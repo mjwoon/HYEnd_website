@@ -1,12 +1,14 @@
 package com.hyend.controller;
 
 import com.hyend.common.ApiResponse;
+import com.hyend.common.ErrorCode;
 import com.hyend.common.PageResponse;
 import com.hyend.dto.announcement.AnnouncementRequest;
 import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.dto.announcement.AnnouncementSummary;
 import com.hyend.dto.file.AttachmentResponse;
 import com.hyend.entity.Attachment;
+import com.hyend.exception.BusinessException;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.AnnouncementService;
 import com.hyend.service.AttachmentService;
@@ -40,6 +42,9 @@ public class AnnouncementController {
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
+        if (keyword != null && !keyword.isBlank() && categoryId != null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "keyword와 categoryId는 동시에 사용할 수 없습니다.");
+        }
         if (keyword != null && !keyword.isBlank()) {
             return ApiResponse.ok(PageResponse.of(announcementService.search(keyword, pageable)));
         }

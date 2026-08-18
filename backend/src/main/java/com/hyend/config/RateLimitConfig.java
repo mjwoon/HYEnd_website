@@ -1,8 +1,11 @@
 package com.hyend.config;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,10 +16,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.time.Duration;
 
 @Configuration
-@RequiredArgsConstructor
 public class RateLimitConfig implements WebMvcConfigurer {
-
-    private final RedisRateLimiter rateLimiter;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -31,20 +31,27 @@ public class RateLimitConfig implements WebMvcConfigurer {
         private static final int GENERAL_CAPACITY = 100;
         private static final Duration WINDOW = Duration.ofMinutes(1);
 
-        private final RedisRateLimiter rateLimiter;
+        // IP당 버킷을 최대 크기와 비활성 만료로 바인딩 — ConcurrentHashMap의 무한 증가 방지
+        private final Cache<String, Bucket> authBuckets = Caffeine.newBuilder()
+                .maximumSize(10_000)
+                .expireAfterAccess(Duration.ofMinutes(2))
+                .build();
 
-        RateLimitInterceptor(RedisRateLimiter rateLimiter) {
-            this.rateLimiter = rateLimiter;
-        }
+        private final Cache<String, Bucket> generalBuckets = Caffeine.newBuilder()
+                .maximumSize(50_000)
+                .expireAfterAccess(Duration.ofMinutes(2))
+                .build();
 
         @Override
         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
             String ip = resolveClientIp(request);
             boolean isAuth = request.getRequestURI().startsWith("/api/auth/");
-            int capacity = isAuth ? AUTH_CAPACITY : GENERAL_CAPACITY;
-            String key = "ratelimit:" + (isAuth ? "auth:" : "general:") + ip;
 
-            if (rateLimiter.tryConsume(key, capacity, WINDOW)) {
+            Bucket bucket = isAuth
+                    ? authBuckets.get(ip, k -> buildBucket(AUTH_CAPACITY))
+                    : generalBuckets.get(ip, k -> buildBucket(GENERAL_CAPACITY));
+
+            if (bucket.tryConsume(1)) {
                 return true;
             }
 
