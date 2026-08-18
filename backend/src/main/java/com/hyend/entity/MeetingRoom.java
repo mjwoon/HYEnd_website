@@ -1,6 +1,5 @@
 package com.hyend.entity;
 
-import com.hyend.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

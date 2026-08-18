@@ -21,6 +21,7 @@ public class MeetingRoomService {
     private final MeetingParticipantRepository participantRepository;
     private final UserRepository userRepository;
     private final LiveKitService liveKitService;
+    private final WebPushService webPushService;
 
     @Transactional
     public MeetingRoomResponse create(MeetingRoomRequest request, Long userId) {
@@ -31,11 +32,16 @@ public class MeetingRoomService {
         // createRoom이 실패하면 BusinessException으로 트랜잭션이 롤백되어 회의방 레코드가 남지 않는다.
         MeetingRoom saved = roomRepository.save(room);
         liveKitService.createRoom(livekitRoomName);
+        webPushService.broadcastToAll(
+                "새 회의가 열렸습니다",
+                host.getName() + "님이 '" + saved.getTitle() + "' 회의를 시작했습니다.",
+                "/meeting/" + saved.getId()
+        );
         return MeetingRoomResponse.from(saved);
     }
 
     public List<MeetingRoomSummary> getList() {
-        return roomRepository.findByStatusNot(MeetingRoom.Status.ENDED).stream()
+        return roomRepository.findAllByOrderByCreatedAtDesc().stream()
                 .map(MeetingRoomSummary::from)
                 .toList();
     }

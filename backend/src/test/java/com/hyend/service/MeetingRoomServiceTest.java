@@ -37,6 +37,7 @@ class MeetingRoomServiceTest {
     @Mock MeetingParticipantRepository participantRepository;
     @Mock UserRepository userRepository;
     @Mock LiveKitService liveKitService;
+    @Mock WebPushService webPushService;
     @InjectMocks MeetingRoomService meetingRoomService;
 
     private User host;
@@ -220,13 +221,13 @@ class MeetingRoomServiceTest {
     void getList_returnsNonEndedRooms_viaStatusNotQuery() {
         MeetingRoom active = MeetingRoom.of("A", "", host, "r1");
         ReflectionTestUtils.setField(active, "id", 1L);
-        when(roomRepository.findByStatusNot(MeetingRoom.Status.ENDED)).thenReturn(List.of(active));
+        when(roomRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(active));
 
         List<MeetingRoomSummary> list = meetingRoomService.getList();
 
         assertThat(list).hasSize(1);
         assertThat(list.get(0).id()).isEqualTo(1L);
-        verify(roomRepository).findByStatusNot(MeetingRoom.Status.ENDED);
+        verify(roomRepository).findAllByOrderByCreatedAtDesc();
     }
 
     @Test
