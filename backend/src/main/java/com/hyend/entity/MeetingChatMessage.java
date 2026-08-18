@@ -9,8 +9,6 @@ import java.time.LocalDateTime;
 @Table(name = "meeting_chat_messages")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-@AllArgsConstructor
 public class MeetingChatMessage {
 
     @Id
@@ -27,20 +25,11 @@ public class MeetingChatMessage {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
-    private Type type = Type.TEXT;
+    private Type type;
 
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    void prePersist() {
-        createdAt = LocalDateTime.now();
-    }
-
-    public enum Type { TEXT }
     @Column(columnDefinition = "TEXT")
     private String fileUrl;
 
@@ -52,13 +41,19 @@ public class MeetingChatMessage {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @PrePersist
+    void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+    }
+
+    public enum Type { TEXT, FILE }
+
     public static MeetingChatMessage text(MeetingRoom room, User user, String content) {
         MeetingChatMessage m = new MeetingChatMessage();
         m.room = room;
         m.user = user;
         m.type = Type.TEXT;
         m.content = content;
-        m.createdAt = LocalDateTime.now();
         return m;
     }
 
@@ -70,7 +65,6 @@ public class MeetingChatMessage {
         m.fileUrl = fileUrl;
         m.fileName = fileName;
         m.fileSize = fileSize;
-        m.createdAt = LocalDateTime.now();
         return m;
     }
 }

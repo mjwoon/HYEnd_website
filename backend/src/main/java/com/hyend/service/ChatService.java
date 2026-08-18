@@ -34,11 +34,7 @@ public class ChatService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         MeetingChatMessage saved = chatRepository.save(
-                MeetingChatMessage.builder()
-                        .room(room)
-                        .user(user)
-                        .content(req.content())
-                        .build()
+                MeetingChatMessage.text(room, user, req.content())
         );
         ChatMessageResponse response = ChatMessageResponse.from(saved);
         messagingTemplate.convertAndSend("/topic/room/" + roomId + "/chat", response);

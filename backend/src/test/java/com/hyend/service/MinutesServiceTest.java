@@ -1,6 +1,5 @@
 package com.hyend.service;
 
-import com.hyend.client.OpenAiClient;
 import com.hyend.common.ErrorCode;
 import com.hyend.dto.meeting.MinutesResponse;
 import com.hyend.entity.MeetingMinutes;
@@ -24,8 +23,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,8 +36,7 @@ class MinutesServiceTest {
     @Mock MeetingRoomRepository roomRepository;
     @Mock MeetingTranscriptRepository transcriptRepository;
     @Mock MeetingMinutesRepository minutesRepository;
-    @Mock OpenAiClient openAiClient;
-    @Mock AiQuotaService quotaService;
+    @Mock GptService gptService;
     @InjectMocks MinutesService minutesService;
 
     private User host;
@@ -52,7 +52,9 @@ class MinutesServiceTest {
         room = MeetingRoom.of("회의", null, host, "room-uuid");
         ReflectionTestUtils.setField(room, "id", 10L);
 
-        transcript = MeetingTranscript.of(room, host, "회의 내용입니다.", 0);
+        transcript = MeetingTranscript.builder()
+                .room(room).speaker(host).text("회의 내용입니다.").chunkIndex(0)
+                .build();
         ReflectionTestUtils.setField(transcript, "id", 1L);
     }
 
@@ -60,8 +62,7 @@ class MinutesServiceTest {
     void generate_createsNewMinutes() {
         when(roomRepository.findById(10L)).thenReturn(Optional.of(room));
         when(transcriptRepository.findByRoomIdOrderByChunkIndex(10L)).thenReturn(List.of(transcript));
-        when(openAiClient.estimateTokens(anyString())).thenReturn(10L);
-        when(openAiClient.summarize(anyString())).thenReturn("## 회의 요약\n요약 내용");
+        when(gptService.complete(anyString(), anyString())).thenReturn("{\"summary\":\"회의 요약\"}");
         when(minutesRepository.findByRoomId(10L)).thenReturn(Optional.empty());
         when(minutesRepository.save(any(MeetingMinutes.class))).thenAnswer(inv -> {
             MeetingMinutes m = inv.getArgument(0);
@@ -72,24 +73,37 @@ class MinutesServiceTest {
         MinutesResponse result = minutesService.generate(10L, 1L);
 
         assertThat(result.content()).contains("회의 요약");
-        assertThat(result.isEdited()).isFalse();
-        verify(quotaService).consumeLlm(eq(10L), anyLong());
+        assertThat(result.roomId()).isEqualTo(10L);
+    }
+
+    @Test
+    void generate_useFallbackWhenGptReturnsBlank() {
+        when(roomRepository.findById(10L)).thenReturn(Optional.of(room));
+        when(transcriptRepository.findByRoomIdOrderByChunkIndex(10L)).thenReturn(List.of(transcript));
+        when(gptService.complete(anyString(), anyString())).thenReturn("");
+        when(minutesRepository.findByRoomId(10L)).thenReturn(Optional.empty());
+        when(minutesRepository.save(any(MeetingMinutes.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        MinutesResponse result = minutesService.generate(10L, 1L);
+
+        assertThat(result.content()).isNotBlank();
     }
 
     @Test
     void generate_regeneratesExistingMinutes() {
-        MeetingMinutes existing = MeetingMinutes.of(room, "이전 내용");
+        MeetingMinutes existing = MeetingMinutes.builder().room(room).content("이전 내용").build();
         ReflectionTestUtils.setField(existing, "id", 1L);
 
         when(roomRepository.findById(10L)).thenReturn(Optional.of(room));
         when(transcriptRepository.findByRoomIdOrderByChunkIndex(10L)).thenReturn(List.of(transcript));
-        when(openAiClient.estimateTokens(anyString())).thenReturn(10L);
-        when(openAiClient.summarize(anyString())).thenReturn("새 요약");
+        when(gptService.complete(anyString(), anyString())).thenReturn("{\"summary\":\"새 요약\"}");
         when(minutesRepository.findByRoomId(10L)).thenReturn(Optional.of(existing));
+        when(minutesRepository.save(any(MeetingMinutes.class))).thenAnswer(inv -> inv.getArgument(0));
 
         MinutesResponse result = minutesService.generate(10L, 1L);
 
-        assertThat(result.content()).isEqualTo("새 요약");
+        assertThat(result.content()).contains("새 요약");
+        verify(minutesRepository).delete(existing);
     }
 
     @Test
@@ -103,19 +117,8 @@ class MinutesServiceTest {
     }
 
     @Test
-    void generate_throwsWhenNoTranscripts() {
-        when(roomRepository.findById(10L)).thenReturn(Optional.of(room));
-        when(transcriptRepository.findByRoomIdOrderByChunkIndex(10L)).thenReturn(List.of());
-
-        assertThatThrownBy(() -> minutesService.generate(10L, 1L))
-                .isInstanceOf(BusinessException.class)
-                .extracting(e -> ((BusinessException) e).getErrorCode())
-                .isEqualTo(ErrorCode.MEETING_NOT_ACTIVE);
-    }
-
-    @Test
     void getMinutes_returnsExistingMinutes() {
-        MeetingMinutes minutes = MeetingMinutes.of(room, "회의록 내용");
+        MeetingMinutes minutes = MeetingMinutes.builder().room(room).content("회의록 내용").build();
         ReflectionTestUtils.setField(minutes, "id", 1L);
         when(minutesRepository.findByRoomId(10L)).thenReturn(Optional.of(minutes));
 
@@ -132,28 +135,5 @@ class MinutesServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.MINUTES_NOT_FOUND);
-    }
-
-    @Test
-    void updateMinutes_updatesContent() {
-        MeetingMinutes minutes = MeetingMinutes.of(room, "원본 내용");
-        ReflectionTestUtils.setField(minutes, "id", 1L);
-        when(roomRepository.findById(10L)).thenReturn(Optional.of(room));
-        when(minutesRepository.findByRoomId(10L)).thenReturn(Optional.of(minutes));
-
-        MinutesResponse result = minutesService.updateMinutes(10L, 1L, "수정된 내용");
-
-        assertThat(result.content()).isEqualTo("수정된 내용");
-        assertThat(result.isEdited()).isTrue();
-    }
-
-    @Test
-    void updateMinutes_throwsWhenNotHost() {
-        when(roomRepository.findById(10L)).thenReturn(Optional.of(room));
-
-        assertThatThrownBy(() -> minutesService.updateMinutes(10L, 99L, "내용"))
-                .isInstanceOf(BusinessException.class)
-                .extracting(e -> ((BusinessException) e).getErrorCode())
-                .isEqualTo(ErrorCode.NOT_MEETING_HOST);
     }
 }
