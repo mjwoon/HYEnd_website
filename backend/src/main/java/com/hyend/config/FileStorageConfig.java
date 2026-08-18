@@ -4,9 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ConfigurationProperties(prefix = "file")
 @Getter
@@ -39,8 +39,8 @@ public class FileStorageConfig {
     }
 
     public Set<String> getAllowedExtensionSet() {
-        return Arrays.stream(allowedExtensions.split(","))
-                .map(String::trim)
+        return Stream.of(allowedExtensions.split(",\\s*"))
+                .filter(s -> !s.isEmpty())
                 .collect(Collectors.toSet());
     }
 }
