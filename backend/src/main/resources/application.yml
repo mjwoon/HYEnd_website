@@ -83,18 +83,6 @@ springdoc:
     display-request-duration: true
     try-it-out-enabled: true
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info, metrics, prometheus   # 노출 엔드포인트
-  endpoint:
-    health:
-      show-details: when-authorized
-  metrics:
-    tags:
-      application: ${spring.application.name}          # 모든 메트릭에 애플리케이션 태그
-
 logging:
   level:
     root: INFO

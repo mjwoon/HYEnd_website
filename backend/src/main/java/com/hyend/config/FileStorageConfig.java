@@ -3,11 +3,13 @@ package com.hyend.config;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+@Configuration
 @ConfigurationProperties(prefix = "file")
 @Getter
 @Setter
@@ -39,8 +41,8 @@ public class FileStorageConfig {
     }
 
     public Set<String> getAllowedExtensionSet() {
-        return Stream.of(allowedExtensions.split(",\\s*"))
-                .filter(s -> !s.isEmpty())
+        return Arrays.stream(allowedExtensions.split(","))
+                .map(String::trim)
                 .collect(Collectors.toSet());
     }
 }
