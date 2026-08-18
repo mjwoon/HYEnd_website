@@ -51,9 +51,6 @@ public class RateLimitConfig implements WebMvcConfigurer {
         }
     }
 
-    // AI 엔드포인트 전용: 시간당 5회
-    static class AiRateLimitInterceptor implements HandlerInterceptor {
-
         private static String resolveClientIp(HttpServletRequest request) {
             String xff = request.getHeader("X-Forwarded-For");
             if (xff != null && !xff.isBlank()) {
