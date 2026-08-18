@@ -1,8 +1,7 @@
 package com.hyend.service;
 
 import com.hyend.common.ErrorCode;
-import com.hyend.dto.meeting.JoinMeetingResponse;
-import com.hyend.dto.meeting.MeetingRoomSummary;
+import com.hyend.dto.meeting.InviteResponse;
 import com.hyend.entity.MeetingRoom;
 import com.hyend.exception.BusinessException;
 import com.hyend.repository.MeetingRoomRepository;
@@ -10,55 +9,40 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class InviteService {
 
-    private static final String KEY_PREFIX = "meeting:invite:";
-
-    private final MeetingRoomRepository roomRepository;
-    private final MeetingRoomService meetingRoomService;
     private final StringRedisTemplate stringRedisTemplate;
+    private final MeetingRoomRepository meetingRoomRepository;
 
-    @Value("${meeting.invite.default-expire-hours}") private long defaultExpireHours;
-    @Value("${meeting.invite.max-expire-hours}") private long maxExpireHours;
+    @Value("${app.base-url:https://hyend.ac.kr}")
+    private String baseUrl;
 
-    @Transactional
-    public String generateInvite(Long roomId, Long userId, Long expireHours) {
-        MeetingRoom room = findRoom(roomId);
-        if (!room.isHost(userId)) throw new BusinessException(ErrorCode.NOT_MEETING_HOST);
-        if (room.isEnded()) throw new BusinessException(ErrorCode.MEETING_ALREADY_ENDED);
-
-        long hours = (expireHours == null) ? defaultExpireHours : Math.min(expireHours, maxExpireHours);
-        String token = UUID.randomUUID().toString().replace("-", "");
-        stringRedisTemplate.opsForValue().set(KEY_PREFIX + token, roomId.toString(), Duration.ofHours(hours));
-        return token;
-    }
-
-    public MeetingRoomSummary getInviteInfo(String token) {
-        Long roomId = resolveRoomId(token);
-        return MeetingRoomSummary.from(findRoom(roomId));
-    }
-
-    public JoinMeetingResponse joinByInvite(String token, Long userId) {
-        Long roomId = resolveRoomId(token);
-        return meetingRoomService.join(roomId, userId);
-    }
-
-    private Long resolveRoomId(String token) {
-        String value = stringRedisTemplate.opsForValue().get(KEY_PREFIX + token);
-        if (value == null) throw new BusinessException(ErrorCode.INVITE_NOT_FOUND);
-        return Long.parseLong(value);
-    }
-
-    private MeetingRoom findRoom(Long id) {
-        return roomRepository.findById(id)
+    public InviteResponse createInvite(Long roomId, Long userId, int expiresInHours) {
+        MeetingRoom room = meetingRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
+        if (!room.isHost(userId)) throw new BusinessException(ErrorCode.NOT_MEETING_HOST);
+
+        String token = UUID.randomUUID().toString().replace("-", "");
+        String key = "meeting:invite:" + token;
+        stringRedisTemplate.opsForValue().set(key, roomId.toString(), expiresInHours, TimeUnit.HOURS);
+
+        return new InviteResponse(
+                "%s/invite/%s".formatted(baseUrl, token),
+                token,
+                LocalDateTime.now().plusHours(expiresInHours)
+        );
+    }
+
+    public Long resolveInvite(String token) {
+        String val = stringRedisTemplate.opsForValue().get("meeting:invite:" + token);
+        if (val == null) throw new BusinessException(ErrorCode.INVITE_NOT_FOUND);
+        return Long.parseLong(val);
     }
 }

@@ -50,10 +50,9 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .requestMatchers("/error").permitAll()
-                // WebSocket (STOMP) — HTTP 업그레이드 허용, 인증은 StompJwtChannelInterceptor에서 처리
+                .requestMatchers(HttpMethod.GET, "/api/invite/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/push/vapid-public-key").permitAll()
                 .requestMatchers("/ws/**").permitAll()
-                // 초대 링크 조회는 인증 불필요
-                .requestMatchers(HttpMethod.GET, "/api/meetings/invite/**").permitAll()
 
                 // ADMIN 전용
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -8,6 +8,8 @@ services:
       - "55173:5173"
     environment:
       - VITE_API_URL=http://backend:8080
+      - VITE_WS_URL=${VITE_WS_URL:-http://localhost:8080/ws}
+      - CHOKIDAR_USEPOLLING=true
     depends_on:
       backend:
         condition: service_healthy
@@ -64,6 +66,12 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - FILE_STORAGE_TYPE=local               # local | s3
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - LIVEKIT_SERVER_URL=${LIVEKIT_URL}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy

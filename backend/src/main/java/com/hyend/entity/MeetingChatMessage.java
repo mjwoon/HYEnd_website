@@ -1,20 +1,20 @@
 package com.hyend.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "meeting_chat_messages")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@AllArgsConstructor
 public class MeetingChatMessage {
 
-    public enum Type { TEXT, FILE }
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,12 +26,21 @@ public class MeetingChatMessage {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
+    @Column(nullable = false)
+    @Builder.Default
     private Type type = Type.TEXT;
 
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    void prePersist() {
+        createdAt = LocalDateTime.now();
+    }
+
+    public enum Type { TEXT }
     @Column(columnDefinition = "TEXT")
     private String fileUrl;
 

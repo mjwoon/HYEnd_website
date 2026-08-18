@@ -1,18 +1,20 @@
 package com.hyend.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "meeting_transcripts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class MeetingTranscript {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -23,7 +25,7 @@ public class MeetingTranscript {
     @JoinColumn(name = "speaker_user_id")
     private User speaker;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String text;
 
     @Column(nullable = false)
@@ -32,13 +34,8 @@ public class MeetingTranscript {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    public static MeetingTranscript of(MeetingRoom room, User speaker, String text, int chunkIndex) {
-        MeetingTranscript t = new MeetingTranscript();
-        t.room = room;
-        t.speaker = speaker;
-        t.text = text;
-        t.chunkIndex = chunkIndex;
-        t.createdAt = LocalDateTime.now();
-        return t;
+    @PrePersist
+    private void prePersist() {
+        createdAt = LocalDateTime.now();
     }
 }

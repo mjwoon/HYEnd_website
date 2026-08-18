@@ -1,6 +1,5 @@
 package com.hyend.config;
 
-import com.hyend.security.StompJwtChannelInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -14,7 +13,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final StompJwtChannelInterceptor stompJwtChannelInterceptor;
+    private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic");
+        config.setApplicationDestinationPrefixes("/app");
+    }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -24,13 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic");
-        config.setApplicationDestinationPrefixes("/app");
-    }
-
-    @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(stompJwtChannelInterceptor);
+        registration.interceptors(stompAuthChannelInterceptor);
     }
 }

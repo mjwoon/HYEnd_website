@@ -1,32 +1,25 @@
 package com.hyend.dto.meeting;
 
 import com.hyend.entity.MeetingChatMessage;
+
 import java.time.LocalDateTime;
 
 public record ChatMessageResponse(
         Long id,
-        Long roomId,
         Long userId,
-        String userName,
-        String type,
+        String senderName,
         String content,
-        String fileUrl,
-        String fileName,
-        Long fileSize,
+        String type,
         LocalDateTime createdAt
 ) {
-    public static ChatMessageResponse from(MeetingChatMessage m) {
+    public static ChatMessageResponse from(MeetingChatMessage msg) {
         return new ChatMessageResponse(
-                m.getId(),
-                m.getRoom().getId(),
-                m.getUser().getId(),
-                m.getUser().getName(),
-                m.getType().name(),
-                m.getContent(),
-                m.getFileUrl(),
-                m.getFileName(),
-                m.getFileSize(),
-                m.getCreatedAt()
+                msg.getId(),
+                msg.getUser().getId(),
+                msg.getUser().getName(),
+                msg.getContent(),
+                msg.getType().name(),
+                msg.getCreatedAt()
         );
     }
 }

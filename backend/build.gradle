@@ -67,8 +67,11 @@ dependencies {
 	// LiveKit Server SDK
 	implementation 'io.livekit:livekit-server:0.6.1'
 
-	// Firebase Admin SDK
-	implementation 'com.google.firebase:firebase-admin:9.4.1'
+	// Web Push (VAPID — Firebase 없이 브라우저 푸시 알림)
+	implementation 'nl.martijndwars:web-push:5.1.2'
+	implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
+	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+	implementation 'org.bitbucket.b_c:jose4j:0.9.6'
 
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'

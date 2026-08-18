@@ -2,9 +2,11 @@ import { useEffect } from 'react';
 import { AppRouter } from '@/router';
 import { userService } from '@/services/userService';
 import { useAuthStore } from '@/store/authStore';
+import { usePushNotification } from '@/hooks/usePushNotification';
 
 function App() {
   const setUser = useAuthStore((state) => state.setUser);
+  usePushNotification();
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
