@@ -10,12 +10,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Service
 @ConditionalOnProperty(name = "file.storage.type", havingValue = "s3")
@@ -55,6 +61,21 @@ public class S3FileStorageService implements FileStorageService {
                 file.getSize(),
                 file.getContentType()
         );
+    }
+
+    @Override
+    public Optional<Resource> loadAsResource(String storedFilename) {
+        GetObjectRequest getRequest = GetObjectRequest.builder()
+                .bucket(config.getStorage().getS3().getBucket())
+                .key(storedFilename)
+                .build();
+        try {
+            return Optional.of(new InputStreamResource(s3Client.getObject(getRequest)));
+        } catch (NoSuchKeyException e) {
+            return Optional.empty();
+        } catch (SdkException e) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
+        }
     }
 
     @Override

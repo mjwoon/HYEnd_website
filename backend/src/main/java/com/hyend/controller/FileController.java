@@ -2,13 +2,16 @@ package com.hyend.controller;
 
 import com.hyend.common.ApiResponse;
 import com.hyend.config.FileStorageConfig;
+import com.hyend.dto.file.AttachmentResponse;
 import com.hyend.dto.file.FileResponse;
+import com.hyend.entity.Attachment;
 import com.hyend.exception.BusinessException;
 import com.hyend.common.ErrorCode;
 import com.hyend.security.UserPrincipal;
+import com.hyend.service.AttachmentService;
 import com.hyend.service.FileStorageService;
-import com.hyend.service.impl.LocalFileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -31,12 +34,17 @@ public class FileController {
 
     private final FileStorageService fileStorageService;
     private final FileStorageConfig fileStorageConfig;
+    private final AttachmentService attachmentService;
 
-    @Operation(summary = "파일 업로드")
+    @Operation(summary = "파일 업로드",
+            description = "entityType(ANNOUNCEMENT/INQUIRY/EVENT)과 entityId를 함께 전달하면 DB에 첨부파일 연결 레코드가 저장됩니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<List<FileResponse>> upload(
+    public ApiResponse<List<AttachmentResponse>> upload(
             @RequestParam("files") List<MultipartFile> files,
+            @RequestParam(required = false) Attachment.EntityType entityType,
+            @RequestParam(required = false) Long entityId,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         int max = fileStorageConfig.getMaxFileCount();
@@ -45,9 +53,14 @@ public class FileController {
                     "최대 " + max + "개의 파일만 업로드할 수 있습니다.");
         }
 
-        List<FileResponse> results = new ArrayList<>();
+        List<AttachmentResponse> results = new ArrayList<>();
         for (MultipartFile file : files) {
-            results.add(fileStorageService.store(file));
+            FileResponse stored = fileStorageService.store(file);
+            if (entityType != null && entityId != null) {
+                results.add(attachmentService.save(stored, entityType, entityId, principal.getId()));
+            } else {
+                results.add(new AttachmentResponse(null, stored.originalFilename(), stored.fileUrl(), stored.size(), stored.contentType()));
+            }
         }
         return ApiResponse.ok("파일이 업로드되었습니다.", results);
     }
@@ -58,12 +71,10 @@ public class FileController {
         if (filename.contains("..") || filename.contains("/")) {
             return ResponseEntity.badRequest().build();
         }
-        if (!(fileStorageService instanceof LocalFileStorageService localService)) {
-            return ResponseEntity.notFound().build();
-        }
-        Resource resource = localService.loadAsResource(filename);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
+        return fileStorageService.loadAsResource(filename)
+                .map(resource -> ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource))
+                .orElse(ResponseEntity.notFound().build());
     }
 }
