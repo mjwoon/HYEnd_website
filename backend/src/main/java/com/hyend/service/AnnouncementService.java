@@ -6,6 +6,7 @@ import com.hyend.dto.announcement.AnnouncementRequest;
 import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.dto.announcement.AnnouncementSummary;
 import com.hyend.entity.Announcement;
+import com.hyend.entity.Attachment;
 import com.hyend.entity.Category;
 import com.hyend.entity.User;
 import com.hyend.exception.BusinessException;
@@ -30,6 +31,8 @@ public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final AttachmentService attachmentService;
+    private final WebPushService webPushService;
 
     @Cacheable(value = "announcements", key = "'list:' + #pageable.pageNumber + ':' + #pageable.pageSize")
     public Page<AnnouncementSummary> getList(Pageable pageable) {
@@ -70,7 +73,13 @@ public class AnnouncementService {
         if (request.isImportant()) {
             announcement.pin();
         }
-        return toResponse(announcementRepository.save(announcement));
+        Announcement saved = announcementRepository.save(announcement);
+        webPushService.broadcastToAll(
+                "새 공지사항",
+                saved.getTitle(),
+                "/announcements/" + saved.getId()
+        );
+        return toResponse(saved);
     }
 
     @Transactional
@@ -91,6 +100,7 @@ public class AnnouncementService {
     @Transactional
     @CacheEvict(value = "announcements", allEntries = true)
     public void delete(Long id) {
+        attachmentService.deleteByEntity(Attachment.EntityType.ANNOUNCEMENT, id);
         announcementRepository.delete(find(id));
     }
 
@@ -134,7 +144,8 @@ public class AnnouncementService {
                 a.isPinned(),
                 viewCount,
                 a.getCreatedAt(),
-                a.getUpdatedAt()
+                a.getUpdatedAt(),
+                attachmentService.findByEntity(Attachment.EntityType.ANNOUNCEMENT, a.getId())
         );
     }
 }

@@ -40,14 +40,6 @@ public class Book extends BaseTimeEntity {
         return book;
     }
 
-    public void decreaseAvailable() {
-        if (this.availableCopies <= 0) {
-            throw new IllegalStateException("대출 가능한 도서가 없습니다.");
-        }
-        this.availableCopies--;
-    }
-
-    public void increaseAvailable() {
-        this.availableCopies++;
-    }
+    // 재고 증감은 동시성 안전을 위해 BookRepository의 원자적 UPDATE
+    // (decrementAvailableIfPositive / incrementAvailable)로 처리한다.
 }
