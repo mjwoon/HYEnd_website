@@ -1,0 +1,5 @@
+ALTER TABLE book_rentals
+    ADD COLUMN extended BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE book_rentals
+    ALTER COLUMN status TYPE VARCHAR(20);

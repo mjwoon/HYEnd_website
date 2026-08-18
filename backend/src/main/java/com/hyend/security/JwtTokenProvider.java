@@ -11,31 +11,38 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
 public class JwtTokenProvider {
 
-    private static final long ACCESS_TOKEN_EXPIRY_MS = 15 * 60 * 1000L;       // 15분
-    private static final long REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000L; // 7일
-
     private final SecretKey secretKey;
+    private final long accessTokenExpiryMs;
+    private final long refreshTokenExpiryMs;
 
-    public JwtTokenProvider(@Value("${jwt.secret}") String secret) {
+    public JwtTokenProvider(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.access-token-expiry}") long accessTokenExpiryMs,
+            @Value("${jwt.refresh-token-expiry}") long refreshTokenExpiryMs
+    ) {
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        this.accessTokenExpiryMs = accessTokenExpiryMs;
+        this.refreshTokenExpiryMs = refreshTokenExpiryMs;
     }
 
     public String createAccessToken(Long userId, String email, String role) {
-        return buildToken(userId, email, role, ACCESS_TOKEN_EXPIRY_MS);
+        return buildToken(userId, email, role, accessTokenExpiryMs);
     }
 
     public String createRefreshToken(Long userId, String email, String role) {
-        return buildToken(userId, email, role, REFRESH_TOKEN_EXPIRY_MS);
+        return buildToken(userId, email, role, refreshTokenExpiryMs);
     }
 
     private String buildToken(Long userId, String email, String role, long expiryMs) {
         Date now = new Date();
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(userId))
                 .claim("email", email)
                 .claim("role", role)
@@ -72,7 +79,11 @@ public class JwtTokenProvider {
         }
     }
 
+    public long getAccessTokenExpiryMs() {
+        return ACCESS_TOKEN_EXPIRY_MS;
+    }
+
     public long getRefreshTokenExpiryMs() {
-        return REFRESH_TOKEN_EXPIRY_MS;
+        return refreshTokenExpiryMs;
     }
 }

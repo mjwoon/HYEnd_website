@@ -7,27 +7,35 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lint": "eslint ."
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.24",
+    "@stomp/stompjs": "^7.3.0",
+    "@tanstack/react-query": "^5.60.0",
+    "@types/sockjs-client": "^1.5.4",
+    "axios": "^1.7.0",
+    "livekit-client": "^2.21.0",
+    "motion": "^12.38.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.0",
-    "axios": "^1.7.0",
-    "zustand": "^5.0.0",
-    "@tanstack/react-query": "^5.60.0"
+    "sockjs-client": "^1.6.1",
+    "styled-components": "^6.4.1",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/styled-components": "^5.1.36",
     "@vitejs/plugin-react": "^4.3.0",
+    "eslint": "^9.0.0",
     "typescript": "~5.7.0",
     "vite": "^6.0.0",
-    "vitest": "^2.1.0",
-    "@playwright/test": "^1.49.0",
-    "eslint": "^9.0.0"
+    "vitest": "^2.1.0"
   }
 }

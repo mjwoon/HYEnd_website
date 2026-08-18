@@ -1,5 +1,9 @@
 package com.hyend.dto.book;
 
-// TODO [H-1] 도서 응답 DTO 구현
-public record BookResponse() {
+public record BookResponse(
+        Long bookId,
+        String title,
+        String author,
+        boolean isAvailable
+) {
 }
