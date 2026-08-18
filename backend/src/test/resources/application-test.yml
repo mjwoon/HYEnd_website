@@ -60,9 +60,6 @@ openai:
   whisper-model: whisper-1
   gpt-model: gpt-4o-mini
 
-firebase:
-  credentials-path:
-
 ai:
   quota:
     whisper-daily-seconds: 3600
