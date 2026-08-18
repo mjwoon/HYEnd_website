@@ -2,6 +2,7 @@ package com.hyend.service;
 
 import com.hyend.client.OpenAiClient;
 import com.hyend.common.ErrorCode;
+import com.hyend.dto.meeting.TranscriptChunkResponse;
 import com.hyend.dto.meeting.TranscriptResponse;
 import com.hyend.entity.MeetingRoom;
 import com.hyend.entity.MeetingTranscript;
@@ -51,6 +52,37 @@ public class TranscriptService {
             String text = openAiClient.transcribe(audio.getBytes(), audio.getOriginalFilename());
             MeetingTranscript transcript = MeetingTranscript.of(room, speaker, text, chunkIndex);
             return CompletableFuture.completedFuture(TranscriptResponse.from(transcriptRepository.save(transcript)));
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Whisper 전사 실패: roomId={}, chunkIndex={}", roomId, chunkIndex, e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Transactional
+    public TranscriptChunkResponse uploadChunk(Long roomId, Long userId, MultipartFile audio, int chunkIndex) {
+        MeetingRoom room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
+        if (room.isEnded()) {
+            throw new BusinessException(ErrorCode.MEETING_ALREADY_ENDED);
+        }
+        User speaker = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        long estimatedSeconds = Math.max(1, audio.getSize() / 2000);
+        quotaService.consumeWhisper(roomId, estimatedSeconds);
+
+        try {
+            String text = openAiClient.transcribe(audio.getBytes(), audio.getOriginalFilename());
+            MeetingTranscript transcript = MeetingTranscript.of(room, speaker, text, chunkIndex);
+            MeetingTranscript saved = transcriptRepository.save(transcript);
+            return new TranscriptChunkResponse(
+                    saved.getId(),
+                    saved.getChunkIndex(),
+                    saved.getText(),
+                    speaker.getName()
+            );
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
