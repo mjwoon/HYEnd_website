@@ -28,6 +28,7 @@ public class InviteService {
         MeetingRoom room = meetingRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEETING_NOT_FOUND));
         if (!room.isHost(userId)) throw new BusinessException(ErrorCode.NOT_MEETING_HOST);
+        if (room.isEnded()) throw new BusinessException(ErrorCode.MEETING_ALREADY_ENDED);
 
         String token = UUID.randomUUID().toString().replace("-", "");
         String key = "meeting:invite:" + token;
