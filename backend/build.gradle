@@ -30,7 +30,6 @@ repositories {
 
 dependencies {
 	// Spring Boot Starters
-	// Spring Boot Starters
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -41,12 +40,11 @@ dependencies {
 
 	// Database & Migration
 	implementation 'org.springframework.boot:spring-boot-starter-flyway'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-
-	// Database & Migration
-	implementation 'org.springframework.boot:spring-boot-starter-flyway'
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	runtimeOnly 'org.postgresql:postgresql'
+
+	// Monitoring (Actuator + Prometheus 메트릭)
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
@@ -59,10 +57,6 @@ dependencies {
 	// MapStruct
 	implementation 'org.mapstruct:mapstruct:1.6.3'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
-
-	// Rate Limiting
-	implementation 'com.bucket4j:bucket4j-core:8.10.1'
-	implementation 'com.github.ben-manes.caffeine:caffeine'
 
 	// AWS S3
 	implementation 'software.amazon.awssdk:s3:2.31.43'
@@ -88,13 +82,11 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'com.h2database:h2'
-	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-
-	// Test
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Testcontainers (실제 PostgreSQL로 Flyway 마이그레이션 검증)
+	testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+	testImplementation 'org.testcontainers:postgresql:1.20.4'
 }
 
 tasks.named('test') {

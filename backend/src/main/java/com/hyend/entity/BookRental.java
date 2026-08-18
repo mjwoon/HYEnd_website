@@ -57,18 +57,12 @@ public class BookRental extends BaseTimeEntity {
         return rental;
     }
 
-    public void returnBook() {
-        this.returnedAt = LocalDateTime.now();
-        this.status = RentalStatus.RETURNED;
-    }
+    // 반납·취소 상태 전이는 동시성 안전을 위해 BookRentalRepository의 원자적 조건부 UPDATE
+    // (markStatusWithReturnedAt / markStatus)로 처리한다.
 
     public void extend(int days) {
         this.dueDate = this.dueDate.plusDays(days);
         this.extended = true;
-    }
-
-    public void cancel() {
-        this.status = RentalStatus.CANCELLED;
     }
 
     public boolean canExtend() {
