@@ -47,8 +47,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/books", "/api/books/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
                 .requestMatchers("/swagger-ui", "/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .requestMatchers("/error").permitAll()
+                // WebSocket (STOMP) — HTTP 업그레이드 허용, 인증은 StompJwtChannelInterceptor에서 처리
+                .requestMatchers("/ws/**").permitAll()
+                // 초대 링크 조회는 인증 불필요
+                .requestMatchers(HttpMethod.GET, "/api/meetings/invite/**").permitAll()
 
                 // ADMIN 전용
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
