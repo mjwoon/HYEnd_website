@@ -10,7 +10,6 @@ public interface AnnouncementMapper {
         @org.mapstruct.Mapping(source = "category.name", target = "category")
         @org.mapstruct.Mapping(source = "author.name", target = "writer")
         @org.mapstruct.Mapping(source = "pinned", target = "isImportant")
-        @org.mapstruct.Mapping(target = "attachments", ignore = true)
         AnnouncementResponse toResponse(Announcement announcement);
 
         AnnouncementSummary toSummary(Announcement announcement);
