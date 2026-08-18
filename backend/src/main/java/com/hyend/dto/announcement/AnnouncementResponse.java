@@ -1,8 +1,9 @@
 package com.hyend.dto.announcement;
 
-import jakarta.validation.constraints.NotBlank;
+import com.hyend.dto.file.AttachmentResponse;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record AnnouncementResponse(
         Long id,
@@ -13,7 +14,7 @@ public record AnnouncementResponse(
         boolean isImportant,
         int viewCount,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
-
+        LocalDateTime updatedAt,
+        List<AttachmentResponse> attachments
 ) {
 }

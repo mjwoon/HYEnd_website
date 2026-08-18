@@ -6,6 +6,7 @@ import com.hyend.dto.announcement.AnnouncementRequest;
 import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.dto.announcement.AnnouncementSummary;
 import com.hyend.entity.Announcement;
+import com.hyend.entity.Attachment;
 import com.hyend.entity.Category;
 import com.hyend.entity.User;
 import com.hyend.exception.BusinessException;
@@ -30,13 +31,15 @@ public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final AttachmentService attachmentService;
+    private final WebPushService webPushService;
 
-    @Cacheable(value = "announcements", key = "'list:' + #pageable.pageNumber + ':' + #pageable.pageSize")
+    @Cacheable(value = "announcements", key = "'list:' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort")
     public Page<AnnouncementSummary> getList(Pageable pageable) {
         return new RestPage<>(announcementRepository.findAll(pageable).map(this::toSummary));
     }
 
-    @Cacheable(value = "announcements", key = "'cat:' + #categoryId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize")
+    @Cacheable(value = "announcements", key = "'cat:' + #categoryId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort")
     public Page<AnnouncementSummary> getByCategory(Long categoryId, Pageable pageable) {
         return new RestPage<>(announcementRepository.findByCategoryId(categoryId, pageable).map(this::toSummary));
     }
@@ -54,9 +57,8 @@ public class AnnouncementService {
 
     @Transactional
     public AnnouncementResponse getDetail(Long id) {
-        Announcement announcement = find(id);
         announcementRepository.incrementViewCount(id);
-        return toResponse(announcement, announcement.getViewCount() + 1);
+        return toResponse(find(id));
     }
 
     @Transactional
@@ -70,7 +72,13 @@ public class AnnouncementService {
         if (request.isImportant()) {
             announcement.pin();
         }
-        return toResponse(announcementRepository.save(announcement));
+        Announcement saved = announcementRepository.save(announcement);
+        webPushService.broadcastToAll(
+                "새 공지사항",
+                saved.getTitle(),
+                "/announcements/" + saved.getId()
+        );
+        return toResponse(saved);
     }
 
     @Transactional
@@ -91,6 +99,7 @@ public class AnnouncementService {
     @Transactional
     @CacheEvict(value = "announcements", allEntries = true)
     public void delete(Long id) {
+        attachmentService.deleteByEntity(Attachment.EntityType.ANNOUNCEMENT, id);
         announcementRepository.delete(find(id));
     }
 
@@ -121,10 +130,6 @@ public class AnnouncementService {
     }
 
     private AnnouncementResponse toResponse(Announcement a) {
-        return toResponse(a, a.getViewCount());
-    }
-
-    private AnnouncementResponse toResponse(Announcement a, int viewCount) {
         return new AnnouncementResponse(
                 a.getId(),
                 a.getTitle(),
@@ -132,9 +137,10 @@ public class AnnouncementService {
                 a.getCategory().getName(),
                 a.getAuthor().getName(),
                 a.isPinned(),
-                viewCount,
+                a.getViewCount(),
                 a.getCreatedAt(),
-                a.getUpdatedAt()
+                a.getUpdatedAt(),
+                attachmentService.findByEntity(Attachment.EntityType.ANNOUNCEMENT, a.getId())
         );
     }
 }

@@ -1,10 +1,5 @@
-import styled from 'styled-components';
-
-const Wrapper = styled.div`
-  padding: 40px;
-  color: white;
-`;
+import PostBoard from '@/components/board/PostBoard';
 
 export default function SubmissionPage() {
-  return <Wrapper>SubmissionPage</Wrapper>;
+  return <PostBoard boardType="SUBMISSION" />;
 }

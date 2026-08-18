@@ -14,12 +14,12 @@ class JwtTokenProviderTest {
 
     private JwtTokenProvider jwtTokenProvider;
 
-    // 256-bit 이상, Base64 인코딩된 시크릿 키
-    private final String testSecret = "tH+X6NUS6EhvGFGIjtYiTwPNi31+6NtEl9BYe8jqWwk=";
+    // 테스트 전용 시크릿 (실제 시크릿을 코드에 넣지 않는다). Base64, 256-bit 이상.
+    private final String testSecret = "dGVzdFNlY3JldEtleUZvclRlc3RpbmdQdXJwb3Nlc09ubHlEb05vdFVzZUluUHJvZHVjdGlvbg==";
 
     @BeforeEach
     void setUp() {
-        jwtTokenProvider = new JwtTokenProvider(testSecret);
+        jwtTokenProvider = new JwtTokenProvider(testSecret, 900_000L, 604_800_000L);
     }
 
     @Test
