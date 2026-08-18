@@ -20,13 +20,16 @@ public class RateLimitConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new RateLimitInterceptor());
+        registry.addInterceptor(new RateLimitInterceptor(rateLimiter));
+        registry.addInterceptor(new AiRateLimitInterceptor(rateLimiter))
+                .addPathPatterns("/api/meetings/*/minutes");
     }
 
     static class RateLimitInterceptor implements HandlerInterceptor {
 
-        private static final int AUTH_CAPACITY = 5;
+        private static final int AUTH_CAPACITY = 30;
         private static final int GENERAL_CAPACITY = 100;
+        private static final Duration WINDOW = Duration.ofMinutes(1);
 
         // IP당 버킷을 최대 크기와 비활성 만료로 바인딩 — ConcurrentHashMap의 무한 증가 방지
         private final Cache<String, Bucket> authBuckets = Caffeine.newBuilder()
@@ -52,27 +55,48 @@ public class RateLimitConfig implements WebMvcConfigurer {
                 return true;
             }
 
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"success\":false,\"message\":\"요청이 너무 많습니다. 잠시 후 다시 시도해주세요.\"}");
+            reject(response, "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
             return false;
         }
+    }
 
-        private static Bucket buildBucket(int capacity) {
-            Bandwidth limit = Bandwidth.builder()
-                    .capacity(capacity)
-                    .refillIntervally(capacity, Duration.ofMinutes(1))
-                    .build();
-            return Bucket.builder().addLimit(limit).build();
+    // AI 엔드포인트 전용: 시간당 5회
+    static class AiRateLimitInterceptor implements HandlerInterceptor {
+
+        private static final int AI_CAPACITY = 5;
+        private static final Duration AI_WINDOW = Duration.ofHours(1);
+
+        private final RedisRateLimiter rateLimiter;
+
+        AiRateLimitInterceptor(RedisRateLimiter rateLimiter) {
+            this.rateLimiter = rateLimiter;
         }
 
-        private static String resolveClientIp(HttpServletRequest request) {
-            String xff = request.getHeader("X-Forwarded-For");
-            if (xff != null && !xff.isBlank()) {
-                return xff.split(",")[0].trim();
+        @Override
+        public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+            if (!"POST".equalsIgnoreCase(request.getMethod())) return true;
+            String ip = resolveClientIp(request);
+            String key = "ratelimit:ai:" + ip;
+
+            if (rateLimiter.tryConsume(key, AI_CAPACITY, AI_WINDOW)) {
+                return true;
             }
-            return request.getRemoteAddr();
+
+            reject(response, "AI 기능은 시간당 5회까지만 사용할 수 있습니다.");
+            return false;
         }
+    }
+
+    static void reject(HttpServletResponse response, String message) throws Exception {
+        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"success\":false,\"message\":\"" + message + "\"}");
+    }
+
+    private static String resolveClientIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) return xff.split(",")[0].trim();
+        return request.getRemoteAddr();
     }
 }
