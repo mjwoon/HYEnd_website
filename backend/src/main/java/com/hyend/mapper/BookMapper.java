@@ -12,6 +12,7 @@ public interface BookMapper {
     @org.mapstruct.Mapping(expression = "java(book.getAvailableCopies() > 0)", target = "isAvailable")
     BookResponse toResponse(Book book);
 
+    @org.mapstruct.Mapping(source = "id", target = "rentalId")
     @org.mapstruct.Mapping(source = "book.id", target = "bookId")
     @org.mapstruct.Mapping(source = "book.title", target = "title")
     @org.mapstruct.Mapping(source = "book.author", target = "author")
