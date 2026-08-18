@@ -42,7 +42,6 @@ jobs:
       OPENAI_API_KEY: ""
       LIVEKIT_API_KEY: test-key
       LIVEKIT_API_SECRET: test-secret
-      LIVEKIT_SERVER_URL: ws://localhost:7880
       APP_BASE_URL: http://localhost:8080
       FILE_STORAGE_TYPE: local
     steps:
