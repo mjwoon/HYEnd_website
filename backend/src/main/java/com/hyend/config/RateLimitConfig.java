@@ -18,9 +18,15 @@ import java.time.Duration;
 @Configuration
 public class RateLimitConfig implements WebMvcConfigurer {
 
+    private final RedisRateLimiter rateLimiter;
+
+    public RateLimitConfig(RedisRateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
+    }
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new RateLimitInterceptor(rateLimiter));
+        registry.addInterceptor(new RateLimitInterceptor());
         registry.addInterceptor(new AiRateLimitInterceptor(rateLimiter))
                 .addPathPatterns("/api/meetings/*/minutes");
     }
@@ -57,6 +63,12 @@ public class RateLimitConfig implements WebMvcConfigurer {
 
             reject(response, "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
             return false;
+        }
+
+        private static Bucket buildBucket(int capacity) {
+            return Bucket.builder()
+                    .addLimit(Bandwidth.simple(capacity, WINDOW))
+                    .build();
         }
     }
 

@@ -158,7 +158,7 @@ export default function Header() {
                     {isAuthenticated && (
                         <NavItem>
                             <NavLink to="/meeting" $active={isMeetingActive}>
-                                회의방
+                                Meeting
                             </NavLink>
                         </NavItem>
                     )}

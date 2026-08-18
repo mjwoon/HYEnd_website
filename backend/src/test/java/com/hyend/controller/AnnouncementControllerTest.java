@@ -6,9 +6,11 @@ import com.hyend.common.PageResponse;
 import com.hyend.dto.announcement.AnnouncementRequest;
 import com.hyend.dto.announcement.AnnouncementResponse;
 import com.hyend.dto.announcement.AnnouncementSummary;
+import com.hyend.dto.file.AttachmentResponse;
 import com.hyend.exception.GlobalExceptionHandler;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.AnnouncementService;
+import com.hyend.service.AttachmentService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,10 +49,12 @@ class AnnouncementControllerTest {
 
     @Mock
     private AnnouncementService announcementService;
+    @Mock
+    private AttachmentService attachmentService;
 
     @BeforeEach
     void setUp() {
-        AnnouncementController controller = new AnnouncementController(announcementService);
+        AnnouncementController controller = new AnnouncementController(announcementService, attachmentService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(
@@ -90,7 +94,7 @@ class AnnouncementControllerTest {
     void getDetail() throws Exception {
         // given
         AnnouncementResponse response = new AnnouncementResponse(
-                1L, "Test Title", "Content", "GENERAL", "Admin", false, 0, LocalDateTime.now(), LocalDateTime.now()
+                1L, "Test Title", "Content", "GENERAL", "Admin", false, 0, LocalDateTime.now(), LocalDateTime.now(), List.of()
         );
         given(announcementService.getDetail(1L)).willReturn(response);
 
@@ -114,7 +118,7 @@ class AnnouncementControllerTest {
 
         AnnouncementRequest request = new AnnouncementRequest("New Title", "New Content", "GENERAL", false);
         AnnouncementResponse response = new AnnouncementResponse(
-                1L, "New Title", "New Content", "GENERAL", "Admin", false, 0, LocalDateTime.now(), LocalDateTime.now()
+                1L, "New Title", "New Content", "GENERAL", "Admin", false, 0, LocalDateTime.now(), LocalDateTime.now(), List.of()
         );
         
         given(announcementService.create(any(AnnouncementRequest.class), any())).willReturn(response);

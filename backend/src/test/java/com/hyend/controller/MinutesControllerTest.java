@@ -6,6 +6,7 @@ import com.hyend.exception.BusinessException;
 import com.hyend.exception.GlobalExceptionHandler;
 import com.hyend.security.UserPrincipal;
 import com.hyend.service.MinutesService;
+import com.hyend.service.TranscriptService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,16 +35,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @MockitoSettings(strictness = Strictness.LENIENT)
 class MinutesControllerTest {
 
+    @Mock private TranscriptService transcriptService;
     @Mock private MinutesService minutesService;
 
     private MockMvc mockMvc;
 
     private static final MinutesResponse MINUTES_RESPONSE =
-            new MinutesResponse(10L, "{\"summary\":\"회의 요약\"}", LocalDateTime.now());
+            new MinutesResponse(10L, 1L, "{\"summary\":\"회의 요약\"}", false, LocalDateTime.now(), LocalDateTime.now());
 
     @BeforeEach
     void setUp() {
-        MinutesController controller = new MinutesController(minutesService);
+        MinutesController controller = new MinutesController(transcriptService, minutesService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
@@ -65,7 +67,7 @@ class MinutesControllerTest {
     void generateMinutes_returns200() throws Exception {
         given(minutesService.generate(10L, 1L)).willReturn(MINUTES_RESPONSE);
 
-        mockMvc.perform(post("/api/meetings/10/minutes"))
+        mockMvc.perform(post("/api/meetings/10/minutes/generate"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content").value("{\"summary\":\"회의 요약\"}"));
     }
@@ -75,7 +77,7 @@ class MinutesControllerTest {
         given(minutesService.generate(10L, 1L))
                 .willThrow(new BusinessException(ErrorCode.NOT_MEETING_HOST));
 
-        mockMvc.perform(post("/api/meetings/10/minutes"))
+        mockMvc.perform(post("/api/meetings/10/minutes/generate"))
                 .andExpect(status().isForbidden());
     }
 
@@ -85,7 +87,7 @@ class MinutesControllerTest {
 
         mockMvc.perform(get("/api/meetings/10/minutes"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.roomId").value(10));
+                .andExpect(jsonPath("$.data.roomId").value(1));
     }
 
     @Test

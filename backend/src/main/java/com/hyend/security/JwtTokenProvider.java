@@ -80,7 +80,7 @@ public class JwtTokenProvider {
     }
 
     public long getAccessTokenExpiryMs() {
-        return ACCESS_TOKEN_EXPIRY_MS;
+        return accessTokenExpiryMs;
     }
 
     public long getRefreshTokenExpiryMs() {
