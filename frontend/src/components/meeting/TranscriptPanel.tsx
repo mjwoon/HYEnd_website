@@ -1,47 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
-import { TranscriptMessage } from '@/types/meeting';
-import { UseStompWSReturn } from '@/hooks/useStompWS';
 
 interface Props {
-  roomId: number;
-  stomp: UseStompWSReturn;
+  roomId?: number;
+  stomp?: unknown;
   isCapturing?: boolean;
 }
 
-export function TranscriptPanel({ roomId, stomp, isCapturing = false }: Props) {
-  const [entries, setEntries] = useState<TranscriptMessage[]>([]);
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const unsub = stomp.subscribe<TranscriptMessage>(
-      `/topic/room/${roomId}/transcript`,
-      (msg) => setEntries((prev) => [...prev, msg])
-    );
-    return unsub;
-  }, [roomId, stomp]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [entries]);
-
+export function TranscriptPanel(_props: Props) {
   return (
     <Panel>
       <Header>실시간 자막</Header>
-      <List>
-        {entries.length === 0 && (
-          <Empty>
-            {isCapturing ? '🎙 음성을 감지하는 중...' : '자막 탭을 클릭하면 자동으로 음성 인식이 시작됩니다.'}
-          </Empty>
-        )}
-        {entries.map((e) => (
-          <Entry key={e.transcriptId}>
-            <Speaker>{e.speakerName}</Speaker>
-            <Text>{e.text}</Text>
-          </Entry>
-        ))}
-        <div ref={bottomRef} />
-      </List>
+      <Body>
+        <Icon>🚧</Icon>
+        <Message>추후 업데이트 예정</Message>
+      </Body>
     </Panel>
   );
 }
@@ -62,36 +34,20 @@ const Header = styled.div`
   border-bottom: 1px solid #2a2a4a;
 `;
 
-const List = styled.div`
+const Body = styled.div`
   flex: 1;
-  overflow-y: auto;
-  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 `;
 
-const Empty = styled.p`
-  font-size: 13px;
-  color: #555;
-  text-align: center;
-  margin-top: 24px;
+const Icon = styled.div`
+  font-size: 32px;
 `;
 
-const Entry = styled.div`
-  background: #22223a;
-  border-radius: 8px;
-  padding: 8px 12px;
-`;
-
-const Speaker = styled.div`
-  font-size: 11px;
-  color: #7070b0;
-  margin-bottom: 4px;
-`;
-
-const Text = styled.div`
+const Message = styled.p`
   font-size: 14px;
-  color: #e0e0f0;
-  line-height: 1.5;
+  color: #555;
 `;

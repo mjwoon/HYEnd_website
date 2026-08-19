@@ -12,7 +12,6 @@ import {
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import type { TrackReferenceOrPlaceholder } from '@livekit/components-core';
-import { useAudioCapture } from '@/hooks/useAudioCapture';
 import { useStompWS } from '@/hooks/useStompWS';
 import { ChatPanel } from '@/components/meeting/ChatPanel';
 import { TranscriptPanel } from '@/components/meeting/TranscriptPanel';
@@ -75,21 +74,9 @@ function RoomContent({ roomId, meetingTitle }: { roomId: number; meetingTitle: s
   /* STOMP */
   const stomp = useStompWS();
 
-  /* Audio capture */
-  const { isCapturing, startCapture, stopCapture } = useAudioCapture();
-  const toggleTranscript = useCallback(async () => {
-    if (isCapturing) {
-      stopCapture();
-    } else {
-      setSidePanel('transcript');
-      await startCapture(roomId);
-    }
-  }, [isCapturing, startCapture, stopCapture, roomId]);
-
-  const switchToTranscript = useCallback(async () => {
+  const switchToTranscript = useCallback(() => {
     setSidePanel('transcript');
-    if (!isCapturing) await startCapture(roomId);
-  }, [isCapturing, startCapture, roomId]);
+  }, []);
 
   /* ── Controls ── */
   const toggleMic = async () => {
@@ -161,7 +148,7 @@ function RoomContent({ roomId, meetingTitle }: { roomId: number; meetingTitle: s
             <PanelBody>
               {sidePanel === 'chat'
                 ? <ChatPanel roomId={roomId} stomp={stomp} />
-                : <TranscriptPanel roomId={roomId} stomp={stomp} isCapturing={isCapturing} />}
+                : <TranscriptPanel />}
             </PanelBody>
           </SidePanel>
         )}
@@ -195,7 +182,7 @@ function RoomContent({ roomId, meetingTitle }: { roomId: number; meetingTitle: s
           <CtrlLabel>화면 공유</CtrlLabel>
         </CtrlBtn>
 
-        <CtrlBtn $active={isCapturing} onClick={toggleTranscript}>
+        <CtrlBtn $active={sidePanel === 'transcript'} onClick={switchToTranscript}>
           <CtrlIcon><TranscriptIcon /></CtrlIcon>
           <CtrlLabel>음성 자막</CtrlLabel>
         </CtrlBtn>
