@@ -6,9 +6,10 @@ import { UseStompWSReturn } from '@/hooks/useStompWS';
 interface Props {
   roomId: number;
   stomp: UseStompWSReturn;
+  isCapturing?: boolean;
 }
 
-export function TranscriptPanel({ roomId, stomp }: Props) {
+export function TranscriptPanel({ roomId, stomp, isCapturing = false }: Props) {
   const [entries, setEntries] = useState<TranscriptMessage[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -28,7 +29,11 @@ export function TranscriptPanel({ roomId, stomp }: Props) {
     <Panel>
       <Header>실시간 자막</Header>
       <List>
-        {entries.length === 0 && <Empty>음성 감지 시 자막이 표시됩니다.</Empty>}
+        {entries.length === 0 && (
+          <Empty>
+            {isCapturing ? '🎙 음성을 감지하는 중...' : '자막 탭을 클릭하면 자동으로 음성 인식이 시작됩니다.'}
+          </Empty>
+        )}
         {entries.map((e) => (
           <Entry key={e.transcriptId}>
             <Speaker>{e.speakerName}</Speaker>

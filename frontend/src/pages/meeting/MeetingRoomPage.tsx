@@ -8,7 +8,6 @@ import {
   VideoTrack,
   useLocalParticipant,
   useParticipants,
-  useRoomInfo,
   useTracks,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
@@ -18,7 +17,7 @@ import { useStompWS } from '@/hooks/useStompWS';
 import { ChatPanel } from '@/components/meeting/ChatPanel';
 import { TranscriptPanel } from '@/components/meeting/TranscriptPanel';
 
-interface LocationState { token: string; roomName: string; isCamOn?: boolean; isMicOn?: boolean; }
+interface LocationState { token: string; roomName: string; isCamOn?: boolean; isMicOn?: boolean; meetingTitle?: string; }
 
 /* ════════════════════════════════════════
    Outer wrapper — sets up LiveKitRoom
@@ -36,7 +35,7 @@ export default function MeetingRoomPage() {
 
   if (!state?.token) return null;
 
-  const { token, isCamOn = true, isMicOn = true } = state;
+  const { token, isCamOn = true, isMicOn = true, meetingTitle = '회의' } = state;
   const livekitUrl = import.meta.env.VITE_LIVEKIT_URL as string;
 
   return (
@@ -49,7 +48,7 @@ export default function MeetingRoomPage() {
       onDisconnected={() => navigate(`/meeting/${roomId}`)}
       style={{ position: 'fixed', inset: 0 }}
     >
-      <RoomContent roomId={roomId} />
+      <RoomContent roomId={roomId} meetingTitle={meetingTitle} />
       <RoomAudioRenderer />
     </LiveKitRoom>
   );
@@ -58,9 +57,8 @@ export default function MeetingRoomPage() {
 /* ════════════════════════════════════════
    Inner component — uses LiveKit hooks
    ════════════════════════════════════════ */
-function RoomContent({ roomId }: { roomId: number }) {
+function RoomContent({ roomId, meetingTitle }: { roomId: number; meetingTitle: string }) {
   const navigate = useNavigate();
-  const { name: lkRoomName } = useRoomInfo();
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled } = useLocalParticipant();
   const participants = useParticipants();
 
@@ -70,9 +68,9 @@ function RoomContent({ roomId }: { roomId: number }) {
 
   /* UI state */
   const [sidePanel, setSidePanel] = useState<'chat' | 'transcript' | null>('chat');
-  const [isTranscriptOn, setIsTranscriptOn] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [deviceError, setDeviceError] = useState<string | null>(null);
 
   /* STOMP */
   const stomp = useStompWS();
@@ -82,17 +80,36 @@ function RoomContent({ roomId }: { roomId: number }) {
   const toggleTranscript = useCallback(async () => {
     if (isCapturing) {
       stopCapture();
-      setIsTranscriptOn(false);
     } else {
-      setIsTranscriptOn(true);
       setSidePanel('transcript');
       await startCapture(roomId);
     }
   }, [isCapturing, startCapture, stopCapture, roomId]);
 
+  const switchToTranscript = useCallback(async () => {
+    setSidePanel('transcript');
+    if (!isCapturing) await startCapture(roomId);
+  }, [isCapturing, startCapture, roomId]);
+
   /* ── Controls ── */
-  const toggleMic = () => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
-  const toggleCam = () => localParticipant.setCameraEnabled(!isCameraEnabled);
+  const toggleMic = async () => {
+    try {
+      setDeviceError(null);
+      await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
+    } catch (e) {
+      console.error('마이크 토글 실패:', e);
+      setDeviceError('마이크 접근 권한을 확인하거나 브라우저에서 마이크를 허용해주세요.');
+    }
+  };
+  const toggleCam = async () => {
+    try {
+      setDeviceError(null);
+      await localParticipant.setCameraEnabled(!isCameraEnabled);
+    } catch (e) {
+      console.error('카메라 토글 실패:', e);
+      setDeviceError('카메라 접근 권한을 확인하거나 브라우저에서 카메라를 허용해주세요.');
+    }
+  };
 
   const toggleScreenShare = async () => {
     try {
@@ -112,7 +129,7 @@ function RoomContent({ roomId }: { roomId: number }) {
       {/* Top bar */}
       <TopBar>
         <TopLeft>
-          <RoomName>{lkRoomName || '회의'}</RoomName>
+          <RoomName>{meetingTitle || '회의'}</RoomName>
           <LiveInfo>
             <LiveDot />
             LIVE · {participants.length}명 참여 중
@@ -139,16 +156,23 @@ function RoomContent({ roomId }: { roomId: number }) {
           <SidePanel>
             <PanelTabs>
               <PanelTab $active={sidePanel === 'chat'} onClick={() => setSidePanel('chat')}>채팅</PanelTab>
-              <PanelTab $active={sidePanel === 'transcript'} onClick={() => setSidePanel('transcript')}>자막</PanelTab>
+              <PanelTab $active={sidePanel === 'transcript'} onClick={switchToTranscript}>자막</PanelTab>
             </PanelTabs>
             <PanelBody>
               {sidePanel === 'chat'
                 ? <ChatPanel roomId={roomId} stomp={stomp} />
-                : <TranscriptPanel roomId={roomId} stomp={stomp} />}
+                : <TranscriptPanel roomId={roomId} stomp={stomp} isCapturing={isCapturing} />}
             </PanelBody>
           </SidePanel>
         )}
       </Body>
+
+      {/* Device error toast */}
+      {deviceError && (
+        <DeviceErrorToast onClick={() => setDeviceError(null)}>
+          ⚠ {deviceError}
+        </DeviceErrorToast>
+      )}
 
       {/* Control bar */}
       <ControlBar>
@@ -171,7 +195,7 @@ function RoomContent({ roomId }: { roomId: number }) {
           <CtrlLabel>화면 공유</CtrlLabel>
         </CtrlBtn>
 
-        <CtrlBtn $active={isTranscriptOn} onClick={toggleTranscript}>
+        <CtrlBtn $active={isCapturing} onClick={toggleTranscript}>
           <CtrlIcon><TranscriptIcon /></CtrlIcon>
           <CtrlLabel>음성 자막</CtrlLabel>
         </CtrlBtn>
@@ -214,7 +238,7 @@ function ParticipantTile({ track }: { track: TrackReferenceOrPlaceholder }) {
   return (
     <Tile $speaking={isSpeaking}>
       {hasVideo ? (
-        <StyledVideo trackRef={track} />
+        <StyledVideo trackRef={track} $mirror={participant.isLocal} />
       ) : (
         <TileCenter>
           <InitialCircle>{initial}</InitialCircle>
@@ -399,10 +423,11 @@ const InitialCircle = styled.div`
   color: #fff;
 `;
 
-const StyledVideo = styled(VideoTrack)`
+const StyledVideo = styled(VideoTrack)<{ $mirror?: boolean }>`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  ${({ $mirror }) => $mirror && 'transform: scaleX(-1);'}
 `;
 
 const TileLabel = styled.div`
@@ -456,6 +481,23 @@ const PanelBody = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+`;
+
+/* Device error toast */
+const DeviceErrorToast = styled.div`
+  position: absolute;
+  bottom: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #EF4444;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.8125rem;
+  color: #FCA5A5;
+  cursor: pointer;
+  white-space: nowrap;
+  z-index: 10;
 `;
 
 /* Control bar */

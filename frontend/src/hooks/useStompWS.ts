@@ -4,9 +4,7 @@ import SockJS from 'sockjs-client';
 
 const getWsUrl = (): string => {
   if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
-  // Vite dev server (port 5173) — WS는 백엔드 직접 연결
   if (window.location.port === '5173') return 'http://localhost:8080/ws';
-  // 운영(nginx port 80) — nginx가 /ws/를 백엔드로 프록시
   return window.location.origin + '/ws';
 };
 const WS_URL = getWsUrl();
@@ -21,29 +19,33 @@ export interface UseStompWSReturn {
 
 export function useStompWS(): UseStompWSReturn {
   const clientRef = useRef<Client | null>(null);
-  const pendingSubscriptions = useRef<Array<{ destination: string; handler: MessageHandler<unknown> }>>([]);
-  const subscriptionRefs = useRef<Map<string, StompSubscription>>(new Map());
   const connectedRef = useRef(false);
   const token = localStorage.getItem('accessToken');
 
+  // Source of truth: all handlers that should be subscribed at any given time
+  const handlersRef = useRef<Map<string, MessageHandler<unknown>>>(new Map());
+  // Active STOMP subscriptions (cleared on disconnect, rebuilt on reconnect)
+  const subscriptionRefs = useRef<Map<string, StompSubscription>>(new Map());
+
   useEffect(() => {
+    const subscribeAll = (client: Client) => {
+      handlersRef.current.forEach((handler, destination) => {
+        if (!subscriptionRefs.current.has(destination)) {
+          const sub = client.subscribe(destination, (msg) => {
+            try { handler(JSON.parse(msg.body)); } catch { /* ignore */ }
+          });
+          subscriptionRefs.current.set(destination, sub);
+        }
+      });
+    };
+
     const client = new Client({
       webSocketFactory: () => new SockJS(WS_URL),
       connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
       reconnectDelay: 3000,
       onConnect: () => {
         connectedRef.current = true;
-        pendingSubscriptions.current.forEach(({ destination, handler }) => {
-          const sub = client.subscribe(destination, (msg) => {
-            try {
-              handler(JSON.parse(msg.body));
-            } catch {
-              /* ignore */
-            }
-          });
-          subscriptionRefs.current.set(destination, sub);
-        });
-        pendingSubscriptions.current = [];
+        subscribeAll(client);
       },
       onDisconnect: () => {
         connectedRef.current = false;
@@ -63,36 +65,25 @@ export function useStompWS(): UseStompWSReturn {
   }, [token]);
 
   const subscribe = useCallback(<T>(destination: string, handler: MessageHandler<T>) => {
+    handlersRef.current.set(destination, handler as MessageHandler<unknown>);
+
     const client = clientRef.current;
-    if (client?.connected) {
+    if (client?.connected && !subscriptionRefs.current.has(destination)) {
       const sub = client.subscribe(destination, (msg) => {
-        try {
-          handler(JSON.parse(msg.body) as T);
-        } catch {
-          /* ignore */
-        }
+        try { (handlersRef.current.get(destination) as MessageHandler<T> | undefined)?.(JSON.parse(msg.body)); } catch { /* ignore */ }
       });
       subscriptionRefs.current.set(destination, sub);
-      return () => {
-        sub.unsubscribe();
-        subscriptionRefs.current.delete(destination);
-      };
     }
-    // Queue until connected
-    const entry = { destination, handler: handler as MessageHandler<unknown> };
-    pendingSubscriptions.current.push(entry);
+
     return () => {
-      pendingSubscriptions.current = pendingSubscriptions.current.filter((e) => e !== entry);
+      handlersRef.current.delete(destination);
       subscriptionRefs.current.get(destination)?.unsubscribe();
       subscriptionRefs.current.delete(destination);
     };
   }, []);
 
   const send = useCallback((destination: string, body: unknown) => {
-    clientRef.current?.publish({
-      destination,
-      body: JSON.stringify(body),
-    });
+    clientRef.current?.publish({ destination, body: JSON.stringify(body) });
   }, []);
 
   return { subscribe, send, connected: connectedRef.current };

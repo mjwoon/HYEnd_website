@@ -34,10 +34,6 @@ export default function MeetingCreatePage() {
 
   return (
     <Page>
-      <BgCircle $size={900} $right={-80} $top={50} />
-      <BgCircle $size={694} $right={103} $top={153} />
-      <BgCircle $size={503} $right={198} $top={248} />
-
       <Content>
         <PageTitle>새 회의방 만들기</PageTitle>
         <PageSub>참여자들과 실시간 온라인 미팅을 시작하세요</PageSub>
@@ -125,24 +121,12 @@ const Page = styled.div`
   overflow: hidden;
 `;
 
-const BgCircle = styled.div<{ $size: number; $right: number; $top: number }>`
-  position: absolute;
-  width: ${({ $size }) => $size}px;
-  height: ${({ $size }) => $size}px;
-  right: ${({ $right }) => $right}px;
-  top: ${({ $top }) => $top}px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.06);
-  pointer-events: none;
-  z-index: 0;
-`;
-
 const Content = styled.div`
   position: relative;
   z-index: 1;
   max-width: 600px;
   margin: 0 auto;
-  padding: 120px 24px 80px;
+  padding: 80px 24px 80px;
 `;
 
 const PageTitle = styled.h1`

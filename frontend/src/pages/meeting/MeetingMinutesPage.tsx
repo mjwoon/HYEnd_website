@@ -94,10 +94,6 @@ export default function MeetingMinutesPage() {
 
   return (
     <Page>
-      <BgCircle $size={900} $right={-80} $top={50} />
-      <BgCircle $size={694} $right={103} $top={153} />
-      <BgCircle $size={503} $right={198} $top={248} />
-
       <Content>
         {/* Breadcrumb */}
         <Breadcrumb>
@@ -225,24 +221,12 @@ const Page = styled.div`
   overflow: hidden;
 `;
 
-const BgCircle = styled.div<{ $size: number; $right: number; $top: number }>`
-  position: absolute;
-  width: ${({ $size }) => $size}px;
-  height: ${({ $size }) => $size}px;
-  right: ${({ $right }) => $right}px;
-  top: ${({ $top }) => $top}px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.06);
-  pointer-events: none;
-  z-index: 0;
-`;
-
 const Content = styled.div`
   position: relative;
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 100px 40px 80px;
+  padding: 60px 40px 80px;
 `;
 
 const Breadcrumb = styled.nav`

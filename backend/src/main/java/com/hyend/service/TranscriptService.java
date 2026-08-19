@@ -13,6 +13,7 @@ import com.hyend.repository.MeetingTranscriptRepository;
 import com.hyend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ public class TranscriptService {
     private final UserRepository userRepository;
     private final OpenAiClient openAiClient;
     private final AiQuotaService quotaService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Async("aiTaskExecutor")
     @Transactional
@@ -77,12 +79,14 @@ public class TranscriptService {
             String text = openAiClient.transcribe(audio.getBytes(), audio.getOriginalFilename());
             MeetingTranscript transcript = MeetingTranscript.of(room, speaker, text, chunkIndex);
             MeetingTranscript saved = transcriptRepository.save(transcript);
-            return new TranscriptChunkResponse(
+            TranscriptChunkResponse response = new TranscriptChunkResponse(
                     saved.getId(),
                     saved.getChunkIndex(),
                     saved.getText(),
                     speaker.getName()
             );
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/transcript", response);
+            return response;
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {

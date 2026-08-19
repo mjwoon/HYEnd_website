@@ -15,6 +15,10 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // FormData 전송 시 Content-Type을 삭제해 브라우저가 boundary 포함 multipart/form-data를 자동 설정하도록 함
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
   return config;
 });
 

@@ -52,8 +52,6 @@ export default function MeetingListPage() {
 
   return (
     <Page>
-      <BgCircles />
-
       <Content>
         <TopSection>
           <div>
@@ -152,34 +150,12 @@ const Page = styled.div`
   overflow: hidden;
 `;
 
-const BgCircles = styled.div`
-  position: absolute;
-  right: -80px;
-  top: 50px;
-  width: 900px;
-  height: 900px;
-  pointer-events: none;
-  z-index: 0;
-  &::before, &::after, & > span {
-    content: '';
-    position: absolute;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.06);
-  }
-  &::before {
-    inset: 100px;
-  }
-  &::after {
-    inset: 0;
-  }
-`;
-
 const Content = styled.div`
   position: relative;
   z-index: 1;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 120px 160px 80px;
+  padding: 60px 160px 80px;
 `;
 
 const TopSection = styled.div`

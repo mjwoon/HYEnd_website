@@ -1,102 +1,45 @@
-import {useNavigate, useLocation} from 'react-router-dom';
 import styled from 'styled-components';
-
-const tabs = [
-    {label: '공지사항', to: '/board/notice'},
-    {label: '공모전', to: '/board/contest'},
-    {label: '제출게시판', to: '/board/submission'},
-    {label: '자유게시판', to: '/board/free'},
-];
+import BoardTabs from '@/components/board/BoardTabs';
 
 interface BoardLayoutProps {
     children: React.ReactNode;
-    onNewPost?: () => void;
-    showNewPost?: boolean;
 }
 
-export default function BoardLayout({children, onNewPost, showNewPost}: BoardLayoutProps) {
-    const navigate = useNavigate();
-    const {pathname} = useLocation();
-
+export default function BoardLayout({ children }: BoardLayoutProps) {
     return (
         <Wrapper>
             <Card>
-                <Tabs>
-                    {tabs.map(tab => (
-                        <Tab
-                            key={tab.to}
-                            $active={pathname === tab.to}
-                            onClick={() => navigate(tab.to)}
-                        >
-                            {tab.label}
-                        </Tab>
-                    ))}
-                </Tabs>
-
+                <BoardTabs />
+                <Divider />
                 {children}
-
-                {showNewPost && (
-                    <NewPostButton onClick={onNewPost}>새글작성 +</NewPostButton>
-                )}
             </Card>
         </Wrapper>
     );
 }
 
 const Wrapper = styled.div`
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 60px 40px;
-    min-height: calc(100vh - 64px);
-    background: ${({theme}) => theme.colors.background};
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 24px;
 `;
 
 const Card = styled.div`
-    width: 100%;
-    max-width: 860px;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.04);
     overflow: hidden;
-`;
-
-const Tabs = styled.div`
     display: flex;
-    gap: 8px;
-    padding: 20px 20px 0;
+    width: 100%;
+    padding: 20px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 16px;
+    border-radius: 14px;
+    border: 1px solid #40423F;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(3px);
 `;
 
-const Tab = styled.button<{ $active: boolean }>`
-    padding: 8px 20px;
-    border-radius: 8px;
-    border: 1px solid ${({$active, theme}) => $active ? theme.colors.neonGreen : 'rgba(255,255,255,0.15)'};
-    background: ${({$active, theme}) => $active ? theme.colors.neonGreen : 'transparent'};
-    color: ${({$active}) => $active ? '#000' : 'rgba(255,255,255,0.6)'};
-    font-size: 0.875rem;
-    font-weight: ${({$active, theme}) => $active ? theme.typography.fontWeight.bold : theme.typography.fontWeight.medium};
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: ${({theme}) => theme.typography.fontFamily};
-
-    &:hover {
-        border-color: ${({theme}) => theme.colors.neonGreen};
-        color: ${({$active}) => $active ? '#000' : 'white'};
-    }
-`;
-
-const NewPostButton = styled.button`
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    background: ${({theme}) => theme.colors.neonGreen};
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 0.875rem;
-    font-weight: ${({theme}) => theme.typography.fontWeight.bold};
-    cursor: pointer;
-    font-family: ${({theme}) => theme.typography.fontFamily};
-    &:hover { opacity: 0.85; }
+const Divider = styled.div`
+    height: 1px;
+    width: 100%;
+    background: ${({ theme }) => theme.colors.border};
 `;
