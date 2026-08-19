@@ -41,8 +41,10 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             }
         }
 
-        // SEND 프레임은 인증된 사용자만 허용
-        if (StompCommand.SEND.equals(accessor.getCommand()) && accessor.getUser() == null) {
+        // SEND / SUBSCRIBE 프레임은 인증된 사용자만 허용
+        StompCommand cmd = accessor.getCommand();
+        if ((StompCommand.SEND.equals(cmd) || StompCommand.SUBSCRIBE.equals(cmd))
+                && accessor.getUser() == null) {
             throw new org.springframework.security.access.AccessDeniedException("인증이 필요합니다.");
         }
 

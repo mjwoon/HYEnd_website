@@ -82,7 +82,9 @@ public class OpenAiClient {
         if (choices == null || choices.isEmpty()) return "";
         @SuppressWarnings("unchecked")
         Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-        return (String) message.get("content");
+        if (message == null) return "";
+        Object content = message.get("content");
+        return content instanceof String s ? s : "";
     }
 
     // rough token estimate: Korean text ~3 chars per token
