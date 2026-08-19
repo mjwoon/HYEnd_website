@@ -16,8 +16,8 @@ public interface BookMapper {
     @org.mapstruct.Mapping(source = "book.id", target = "bookId")
     @org.mapstruct.Mapping(source = "book.title", target = "title")
     @org.mapstruct.Mapping(source = "book.author", target = "author")
-    @org.mapstruct.Mapping(expression = "java(rental.getBook().getAvailableCopies() > 0)", target = "isAvailable")
     @org.mapstruct.Mapping(expression = "java(rental.canExtend())", target = "canExtend")
+    @org.mapstruct.Mapping(expression = "java(rental.getBook().getAvailableCopies() > 0)", target = "isAvailable")
     @org.mapstruct.Mapping(source = "rentedAt", target = "startDate")
     @org.mapstruct.Mapping(source = "dueDate", target = "endDate")
     RentalResponse toResponse(BookRental rental);

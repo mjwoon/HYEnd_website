@@ -59,6 +59,7 @@ export default function PostBoard({ boardType, adminOnly = false }: PostBoardPro
 
   return (
     <BoardLayout>
+      <ContentArea>
       <TableHeader>
         <ColTitle>제목</ColTitle>
         <ColAuthor>작성자</ColAuthor>
@@ -109,12 +110,15 @@ export default function PostBoard({ boardType, adminOnly = false }: PostBoardPro
           <NewPostButton onClick={() => navigate(`${basePath}/new`)}>새글작성 +</NewPostButton>
         )}
       </Footer>
+      </ContentArea>
     </BoardLayout>
   );
 }
 
+const ContentArea = styled.div`width: 100%;`;
+
 const TableHeader = styled.div`
-    display: flex; align-items: center; padding: 12px 20px; margin-top: 20px;
+    display: flex; align-items: center; padding: 12px 20px;
     background: rgba(255,255,255,0.05);
     border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1);
     color: ${({ theme }) => theme.colors.neonGreen};

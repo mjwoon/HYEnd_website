@@ -139,6 +139,7 @@ export default function Header() {
 
     const isAboutActive = pathname.startsWith('/about');
     const isBoardActive = pathname.startsWith('/board');
+    const isMeetingActive = pathname.startsWith('/meeting');
 
     return (
         <>
@@ -150,6 +151,14 @@ export default function Header() {
                         <NavItem>
                             <NavLink to="/home" $active={pathname === '/home'}>
                                 Home
+                            </NavLink>
+                        </NavItem>
+                    )}
+
+                    {isAuthenticated && (
+                        <NavItem>
+                            <NavLink to="/meeting" $active={isMeetingActive}>
+                                Meeting
                             </NavLink>
                         </NavItem>
                     )}
