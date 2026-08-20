@@ -81,6 +81,6 @@ public class LocalFileStorageService implements FileStorageService {
                 return Optional.of(resource);
             }
         } catch (MalformedURLException ignored) {}
-        return Optional.empty();
+        throw new BusinessException(ErrorCode.ATTACHMENT_NOT_FOUND);
     }
 }
