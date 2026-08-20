@@ -88,7 +88,17 @@ jobs:
     needs: [backend-test, frontend-check]
     if: github.ref == 'refs/heads/master'
     steps:
+      - name: Check deploy secrets
+        id: deploy-secrets
+        run: |
+          if [ -z "${{ secrets.EC2_HOST }}" ] || [ -z "${{ secrets.EC2_USER }}" ] || [ -z "${{ secrets.EC2_SSH_KEY }}" ] || [ -z "${{ secrets.EC2_WORKDIR }}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping deploy: missing required EC2 deployment secrets."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Deploy via SSH
+        if: steps.deploy-secrets.outputs.configured == 'true'
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
