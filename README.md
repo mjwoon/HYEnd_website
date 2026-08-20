@@ -179,3 +179,55 @@ npm run build
   1. 맥북 우측 상단 메뉴바의 **고래 아이콘(Docker)** 클릭
   2. `Restart` 혹은 `Quit Docker Desktop` 으로 앱 완전 재시작
   3. 초록불(`Running`)로 완전히 켜진 후 새로운 터미널을 열어 명령어 재입력
+
+---
+
+## 5. 테스트 실행 🧪
+
+### A. 백엔드 단위/통합 테스트
+```bash
+cd backend
+
+# 테스트 실행 (Testcontainers가 PostgreSQL 컨테이너를 자동으로 띄움 — Docker 필요)
+./gradlew test
+
+# 결과 리포트: backend/build/reports/tests/test/index.html
+```
+
+### B. 프론트엔드 타입 검사 및 단위 테스트
+```bash
+cd frontend   # 또는 cd admin
+
+# TypeScript 타입 검사
+npx tsc --noEmit
+
+# Vitest 단위 테스트
+npm run test
+```
+
+### C. E2E 테스트 (Playwright)
+```bash
+cd frontend
+
+# 최초 1회 — Playwright 브라우저 설치
+npx playwright install
+
+# E2E 테스트 실행 (개발 서버가 실행 중이어야 함)
+npm run test:e2e
+
+# 결과 리포트: frontend/playwright-report/index.html
+```
+
+---
+
+## 6. CI/CD 파이프라인 🤖
+
+`master` 또는 `dev` 브랜치에 push하거나 PR을 열면 GitHub Actions가 자동으로 테스트를 실행합니다.  
+`master`에 push 시 테스트 통과 후 EC2 서버에 자동 배포됩니다.
+
+```
+push to master → 백엔드 테스트 + 프론트엔드 빌드 → EC2 자동 배포
+```
+
+> 자세한 내용은 `.github/workflows/ci.yml` 및 `docs/HANDOVER.md` 참고.  
+> 배포가 동작하려면 GitHub 저장소 Secrets 등록이 필요합니다 — `SECURITY.md` 참고.
