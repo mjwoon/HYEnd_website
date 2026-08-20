@@ -68,4 +68,8 @@ public class BookRental extends BaseTimeEntity {
     public boolean canExtend() {
         return !this.extended && this.status == RentalStatus.ACTIVE;
     }
+
+    public void cancel() {
+        this.status = RentalStatus.CANCELLED;
+    }
 }

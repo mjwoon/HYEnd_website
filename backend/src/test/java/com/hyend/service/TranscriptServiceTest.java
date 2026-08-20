@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -38,6 +39,7 @@ class TranscriptServiceTest {
     @Mock UserRepository userRepository;
     @Mock OpenAiClient openAiClient;
     @Mock AiQuotaService quotaService;
+    @Mock SimpMessagingTemplate messagingTemplate;
     @InjectMocks TranscriptService transcriptService;
 
     private User speaker;
