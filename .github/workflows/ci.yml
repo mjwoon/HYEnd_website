@@ -113,6 +113,8 @@ jobs:
             VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
             APP_BASE_URL=${{ secrets.APP_BASE_URL }}
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_WS_URL=${{ secrets.VITE_WS_URL }}
             EOF
 
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
