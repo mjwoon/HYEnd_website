@@ -34,6 +34,7 @@ coverage/
 *~
 *.iml
 .DS_Store
+.omc
 
 # Environment variables
 .env
