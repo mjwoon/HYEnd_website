@@ -18,7 +18,7 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
 
     Page<Announcement> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE Announcement a SET a.viewCount = a.viewCount + 1 WHERE a.id = :id")
     void incrementViewCount(@Param("id") Long id);
 }

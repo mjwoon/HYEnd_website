@@ -5,9 +5,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "55173:5173"
+      - "5173:80"
     environment:
       - VITE_API_URL=http://backend:8080
+      - VITE_WS_URL=${VITE_WS_URL:-http://localhost:8080/ws}
+      - CHOKIDAR_USEPOLLING=true
     depends_on:
       backend:
         condition: service_healthy
@@ -57,13 +59,19 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
       - SPRING_PROFILES_ACTIVE=dev
-      - JWT_SECRET=${SECRET_KEY}
+      - JWT_SECRET=${SECRET_KEY:-aHllbmQtZGV2LXNlY3JldC1rZXktZm9yLWxvY2FsLWRldmVsb3BtZW50LW9ubHktbm90LWZvci1wcm9kdWN0aW9u}
       - JAVA_OPTS=-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
       - AWS_S3_BUCKET=${AWS_S3_BUCKET}
       - AWS_S3_REGION=${AWS_S3_REGION}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - FILE_STORAGE_TYPE=local               # local | s3
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - LIVEKIT_SERVER_URL=${LIVEKIT_URL}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy

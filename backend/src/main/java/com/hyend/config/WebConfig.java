@@ -14,6 +14,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:5173",  // 로컬 프론트엔드
                         "http://localhost:55173", // Docker 프론트엔드
                         "http://localhost:5174",  // Admin
+                        "http://13.209.76.52",
+                        "http://13.209.76.52:55173",
+                        "http://13.209.76.52:5174",
                         "https://hyend.kr"        // 운영 서버
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")

@@ -1,5 +1,20 @@
 package com.hyend.dto.announcement;
 
-// TODO [H-1] 공지사항 상세 응답 DTO 구현
-public record AnnouncementResponse() {
+import com.hyend.dto.file.AttachmentResponse;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public record AnnouncementResponse(
+        Long id,
+        String title,
+        String content,
+        String category,
+        String writer,
+        boolean isImportant,
+        int viewCount,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        List<AttachmentResponse> attachments
+) {
 }

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class BookRental extends BaseTimeEntity {
 
     public enum RentalStatus {
-        ACTIVE, RETURNED, OVERDUE
+        ACTIVE, RETURNED, OVERDUE, CANCELLED
     }
 
     @Id
@@ -44,17 +44,32 @@ public class BookRental extends BaseTimeEntity {
     @Column(nullable = false)
     private RentalStatus status = RentalStatus.ACTIVE;
 
+    @Column(nullable = false)
+    private boolean extended = false;
+
     public static BookRental of(Book book, User user, LocalDateTime dueDate) {
         BookRental rental = new BookRental();
         rental.book = book;
         rental.user = user;
         rental.dueDate = dueDate;
         rental.status = RentalStatus.ACTIVE;
+        rental.extended = false;
         return rental;
     }
 
-    public void returnBook() {
-        this.returnedAt = LocalDateTime.now();
-        this.status = RentalStatus.RETURNED;
+    // 반납·취소 상태 전이는 동시성 안전을 위해 BookRentalRepository의 원자적 조건부 UPDATE
+    // (markStatusWithReturnedAt / markStatus)로 처리한다.
+
+    public void extend(int days) {
+        this.dueDate = this.dueDate.plusDays(days);
+        this.extended = true;
+    }
+
+    public boolean canExtend() {
+        return !this.extended && this.status == RentalStatus.ACTIVE;
+    }
+
+    public void cancel() {
+        this.status = RentalStatus.CANCELLED;
     }
 }
